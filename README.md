@@ -79,6 +79,10 @@ SECTIONS
 | `LE_z` | fore/aft LE position along +z, in local chords (sweep) |
 | `airfoil` | `nacaXXXX` (4-digit) or path to a Selig-format `.dat` file |
 
+See `examples/rotor_23012.dat` for a blade built from a Selig airfoil file
+(`examples/naca23012.dat` — a 5-digit section, hence not expressible as
+`nacaXXXX`); the path is resolved relative to the input file.
+
 Between stations chord/twist/LE_z vary linearly and airfoil ordinates are
 blended linearly. Optional keywords: `dLE_c` (LE chordwise spacing),
 `dRootFrac`/`dTipFrac` (spanwise tanh clustering), `rootCut`,

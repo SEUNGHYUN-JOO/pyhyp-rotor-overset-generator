@@ -1,0 +1,26 @@
+# ============================================================================
+# Generic helicopter-style rotor blade using a Selig-format airfoil FILE:
+# NACA 23012 (5-digit — not expressible as "nacaXXXX", hence the .dat file;
+# the path is resolved relative to THIS input file).
+# Constant chord, -8 deg linear washout (twist about the local 0.25c).
+# ============================================================================
+R          2.0
+
+# ---- surface ----
+nChord     160
+nTE        7
+teCut      0.97
+dTE_c      0.003
+nSpan      64
+dTipFrac   0.006
+closedSock 1
+
+# ---- march (pyHyp) ----
+firstLayer 3.0e-6
+nLayers    72
+marchDist  0.12
+
+SECTIONS
+# r/R    chord[m]   twist[deg]  LE_z[c]  airfoil
+0.22     0.121      8.0         0.0      naca23012.dat
+1.00     0.121      0.0         0.0      naca23012.dat
