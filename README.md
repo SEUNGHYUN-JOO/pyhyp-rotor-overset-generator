@@ -213,6 +213,26 @@ Windows. pyHyp itself is Linux/macOS software, so run the march step under
 `make_rotor.sh` is a bash script and runs as-is inside WSL. The generated
 PLOT3D/VTK files are plain text and portable across OSes.
 
+## Citation
+
+If you use this software in your research, please cite it. GitHub's
+*"Cite this repository"* button uses `CITATION.cff`; an archived, DOI-carrying
+snapshot of each release is available via Zenodo:
+
+<!-- After the first release, replace XXXXXXX with the Zenodo concept DOI -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+
+```bibtex
+@software{joo_pyhyp_rotor_overset_generator,
+  author  = {Joo, Seunghyun},
+  title   = {pyhyp-rotor-overset-generator: structured overset mesh
+             generation for rotors with pyHyp},
+  url     = {https://github.com/SEUNGHYUN-JOO/pyhyp-rotor-overset-generator},
+  doi     = {10.5281/zenodo.XXXXXXX},
+  license = {MIT}
+}
+```
+
 ## License
 
 MIT (this package). pyHyp is licensed separately (LGPL) by the MDO Lab.

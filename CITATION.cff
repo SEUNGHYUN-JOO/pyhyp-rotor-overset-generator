@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "pyhyp-rotor-overset-generator"
+type: software
+authors:
+  - family-names: "Joo"
+    given-names: "Seunghyun"
+repository-code: "https://github.com/SEUNGHYUN-JOO/pyhyp-rotor-overset-generator"
+license: MIT
+keywords:
+  - CFD
+  - mesh generation
+  - overset
+  - chimera
+  - rotor
+  - pyHyp
+# After the first Zenodo-archived release, add the CONCEPT DOI here:
+# doi: 10.5281/zenodo.XXXXXXX
