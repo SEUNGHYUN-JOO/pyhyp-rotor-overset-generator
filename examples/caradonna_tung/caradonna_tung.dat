@@ -28,7 +28,7 @@ nLayers    76          # marching layers (overridden when autoMatch 1)
 marchDist  0.19        # total march distance [m]
 autoMatch  1           # 1: force nLayers to match the background spacing / 0: use nLayers as written
 #matchFactor 0.9         # target outer cell = matchFactor * h_bg (default)
-#splay      0.25        # open-sock free-edge splay (default)
+#splay      0.25        # open-end free-edge splay (default)
 #volSmoothIter 100         # pyHyp volume smoothing iterations (default)
 #volBlend   0.0005      # pyHyp volume blending (default)
 #volCoef    0.25        # pyHyp volume coefficient (default)

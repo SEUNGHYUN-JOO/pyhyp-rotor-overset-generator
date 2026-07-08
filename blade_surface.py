@@ -2,7 +2,7 @@
 # -----------------------------------------------------------------------------
 #  Author: JOO Seunghyun <chlrh45351@gmail.com>  (2026-07)
 #  blade_surface.py — structured multiblock PLOT3D surface of a rotor/wing
-#  blade skin (closed watertight "sock") for pyHyp hyperbolic extrusion.
+#  blade skin (closed and watertight) for pyHyp hyperbolic extrusion.
 #
 #  Solver-agnostic: outputs plain formatted PLOT3D; the marched volume can be
 #  used with any structured/unstructured CFD solver.
@@ -31,7 +31,7 @@
 #  ordinates ("nacaXXXX" or a Selig .dat path, relative to the input file)
 #  are blended linearly.
 #
-#  TOPOLOGY (pyHyp-compatible closed sock, no degenerate edges):
+#  TOPOLOGY (pyHyp-compatible watertight skin, no degenerate edges):
 #      block 1 : main O-grid   (i = airfoil perimeter, j = span)
 #      block 2 : tip  cap — Coons-TFI H-grid whose 4 edges are exact subsets
 #                of the main end perimeter (LE nose arc / lower / TE seal /
@@ -383,8 +383,8 @@ def build(cfg, out, base="."):
                         f.write("%.10g\n" % A[i, jj])
     sys.stderr.write("[blade_surface] wrote %s : main %dx%d%s\n"
                      % (out, nper, nspan,
-                        " + 2 TFI caps (closed sock)" if len(blocks) > 1 else
-                        " (open sock)"))
+                        " + 2 TFI caps (watertight)" if len(blocks) > 1 else
+                        " (open ends)"))
     return len(blocks)
 
 
@@ -393,7 +393,7 @@ def cap_tfi(sec, nchord, nte, ystation, isTip, capDome=0.0):
     the main end perimeter (autoConnect/pointReduce stitchable).
     capDome > 0 bulges the cap INTERIOR outboard into a slightly rounded tip
     (local half-thickness dome; 1.0 ~ a semicircular cross-section).  The
-    boundary points are untouched, so the closed-sock stitching and the
+    boundary points are untouched, so the block stitching and the
     directed-edge normal check are unaffected."""
     C, T, chord, twist, zle = sec
     nth = nte + 2

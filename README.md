@@ -14,14 +14,14 @@ near-body component of an overset (chimera) setup.
 
 ```
 rotor.dat ──▶ blade_surface.py ──▶ skin.fmt ──▶ march.py (pyHyp) ──▶ bladeVol.xyz
-               (closed sock,                     (hyperbolic BL,        │ nBlades > 1
+               (watertight skin,                     (hyperbolic BL,        │ nBlades > 1
                 multiblock surface)               i = wall-normal)      ▼
                                                                    rotorVol.xyz
 ```
 
 Caradonna-Tung example (ParaView):
 
-| blade skin (single blade) | BL volume — closed sock |
+| blade skin (single blade) | BL volume — watertight closure |
 |---|---|
 | ![blade surface](examples/caradonna_tung/image/surface.png) | ![BL volume](examples/caradonna_tung/image/rotor_volume.png) |
 | **section slice — O-grid, y+≈1 layers** | **Cartesian background — refinement box** |
@@ -40,7 +40,7 @@ thin lifting surfaces (self-intersection at the TE, ~60° non-orthogonality
 for tetrahedral BLs). A pyHyp hyperbolic march from a structured skin gives
 orthogonal hexahedral layers (typically **~2° mean non-orthogonality**) with a
 first-cell spacing you set directly in meters. The hard part — a watertight
-("closed sock") surface topology that pyHyp accepts — is what this package
+(watertight) surface topology that pyHyp accepts — is what this package
 automates.
 
 ## Axis convention (rotor frame)
@@ -97,7 +97,7 @@ nSpan      70           # spanwise stations                        (default 60)
 #dRootFrac auto         # spanwise tanh clustering at the root; default uniform
 #dTipFrac  auto         # spanwise tanh clustering at the tip;  default uniform
 #rootCut   auto         # span start y/R; default = first SECTIONS r/R
-closedSock 1            # 1: watertight TFI-cap sock / 0: open + splay (default 1)
+closedSock 1            # 1: watertight tips (TFI caps) / 0: open + splay (default 1)
 capDome    0.25         # rounded tip cap, 0 flat .. ~1 half-thickness dome
                         #   (default 0; 0.2-0.4 recommended)
 #datSmooth 5            # smoothing passes for tabulated airfoils  (default 5)
@@ -109,7 +109,7 @@ marchDist  0.19         # total march distance [m]
 autoMatch  1            # 1: force nLayers so the outer wall-normal cell
                         #    matches the background refine spacing / 0: off
 #matchFactor 0.9        # target outer cell = matchFactor * h_bg   (default 0.9)
-#splay     0.25         # open-sock free-edge splay                (default 0.25)
+#splay     0.25         # open-end free-edge splay                 (default 0.25)
 #volSmoothIter 100      # pyHyp volume smoothing iterations        (default 100)
 #volBlend  0.0005       # pyHyp volume blending                    (default 0.0005)
 #volCoef   0.25         # pyHyp volume coefficient                 (default 0.25)
@@ -250,7 +250,7 @@ aggressive tests (few layers over a large `marchDist`) collapse instead.
 
 ## Topology notes (the parts that are easy to get wrong)
 
-* **Closed sock**: the skin is a watertight multiblock quilt — a main O-grid
+* **Watertight skin**: the skin is a single watertight multiblock quilt — a main O-grid
   (i = perimeter, j = span) plus two **non-degenerate Coons-TFI caps**. pyHyp's
   normal check registers every quad's four *directed* edges and aborts on any
   repeat, so a cap with a collapsed edge (point/camber-line tip) can NEVER
@@ -276,12 +276,12 @@ aggressive tests (few layers over a large `marchDist`) collapse instead.
   the cap INTERIOR outboard into a slightly rounded tip (a local
   half-thickness dome, `capDome 1` ~ semicircular cross-section; 0.2-0.4
 gives a subtle edge rounding and is the recommended range). Cap
-  boundary points are untouched, so the sock stitching and pyHyp's normal
+  boundary points are untouched, so the block stitching and pyHyp's normal
   check are unaffected (validated: Caradonna-Tung with `capDome 0.6`, final
   Min Quality 0.41). For a true CAD-defined rounded cap you can also build
   the skin externally (e.g. pyGeo's rounded-tip lifting surfaces, or project
   onto a CAD tip) and feed the resulting multiblock PLOT3D skin straight to
-  `march.py` — the closed-sock topology rules in this README still apply.
+  `march.py` — the watertight-topology rules in this README still apply.
 * **Known limitation** — cambered sections with large twist at the blade
   ENDS leave a small number of non-convex corner cells in the end-cap blocks
   near the LE (0 for symmetric sections; ~0.1% of cap cells for SC1095 at

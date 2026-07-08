@@ -16,7 +16,7 @@
 #      firstLayer : first cell wall spacing (y+ target)
 #      nLayers    : number of marching layers
 #      marchDist  : total marching distance
-#      splay      : splay factor for open-sock free edges (single block only)
+#      splay      : splay factor for open-end free edges (single block only)
 #      volSmoothIter, volBlend, cMax, epsE, epsI, theta, nConstantStart
 # -----------------------------------------------------------------------------
 import sys, os
