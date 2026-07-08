@@ -1,5 +1,7 @@
 # pyhyp-rotor-overset-generator
 
+[![DOI](https://zenodo.org/badge/1293316970.svg)](https://doi.org/10.5281/zenodo.21257648)
+
 Structured overset (chimera) mesh generation for rotors with
 [pyHyp](https://github.com/mdolab/pyhyp): a wall-resolved (y+ ≈ 1)
 boundary-layer **blade component mesh** from a plain-text per-section
@@ -219,8 +221,7 @@ If you use this software in your research, please cite it. GitHub's
 *"Cite this repository"* button uses `CITATION.cff`; an archived, DOI-carrying
 snapshot of each release is available via Zenodo:
 
-<!-- After the first release, replace XXXXXXX with the Zenodo concept DOI -->
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/1293316970.svg)](https://doi.org/10.5281/zenodo.21257648)
 
 ```bibtex
 @software{joo_pyhyp_rotor_overset_generator,
@@ -228,7 +229,7 @@ snapshot of each release is available via Zenodo:
   title   = {pyhyp-rotor-overset-generator: structured overset mesh
              generation for rotors with pyHyp},
   url     = {https://github.com/SEUNGHYUN-JOO/pyhyp-rotor-overset-generator},
-  doi     = {10.5281/zenodo.XXXXXXX},
+  doi     = {10.5281/zenodo.21257648},
   license = {MIT}
 }
 ```
