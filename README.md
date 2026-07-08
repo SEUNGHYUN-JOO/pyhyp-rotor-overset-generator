@@ -97,6 +97,8 @@ closedSock 1
 firstLayer 2.78e-6      # first wall spacing [m]  (y+ target)
 nLayers    76
 marchDist  0.19         # total march distance [m]
+autoMatch  1            # 1: force nLayers so the outer wall-normal cell
+                        #    matches the background refine spacing / 0: off
 
 SECTIONS
 # r/R    chord[m]   twist[deg]  LE_z[m]  airfoil
@@ -127,9 +129,9 @@ Examples using airfoil files:
 
 Between stations chord/twist/LE_z vary linearly and airfoil ordinates are
 blended linearly. Optional keywords: `dLE_c` (LE chordwise spacing),
-`dRootFrac`/`dTipFrac` (spanwise tanh clustering), `rootCut`,
+`dRootFrac`/`dTipFrac` (spanwise tanh clustering), `rootCut`, `datSmooth`,
 `splay`, `volSmoothIter`, `volBlend`, `cMax`, `epsE`, `epsI`, `theta`,
-`nConstantStart`.
+`nConstantStart`, `autoMatch` (0/1, see below), `matchFactor` (default 0.9).
 
 ## Usage
 

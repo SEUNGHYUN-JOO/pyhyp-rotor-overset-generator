@@ -20,7 +20,7 @@ closedSock 1
 firstLayer 3.0e-6
 nLayers    72
 marchDist  0.12
-#autoMatch  1            # force nLayers to match the background spacing
+autoMatch  1            # 1: force nLayers to match the background spacing / 0: use nLayers as written
 
 # ---- overset background mesh (background_mesh.py) -------------------------
 # All of these are optional; values below are the defaults (extents in R).
