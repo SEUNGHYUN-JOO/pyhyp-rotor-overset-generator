@@ -1,9 +1,10 @@
-# pyhyp-blade-mesh
+# pyhyp-rotor-overset-mesh
 
-Structured, wall-resolved (y+ ≈ 1) boundary-layer meshing of rotor/wing
-blades with [pyHyp](https://github.com/mdolab/pyhyp) hyperbolic extrusion —
-from a **plain-text per-section planform table** to a watertight multiblock
-volume.
+Structured overset (chimera) mesh generation for rotors with
+[pyHyp](https://github.com/mdolab/pyhyp): a wall-resolved (y+ ≈ 1)
+boundary-layer **blade component mesh** from a plain-text per-section
+planform table, full-rotor replication, and a matching structured Cartesian
+**background mesh** with a rotor refinement box.
 
 The output is plain formatted **PLOT3D**, so the mesh is solver-agnostic:
 convert/import it into OpenFOAM, SU2, CGNS-based codes, or use it as the
