@@ -50,7 +50,7 @@ import numpy as np
 # ---------------------------------------------------------------------------
 SURF_KEYS = {"nChord", "nTE", "teCut", "dLE_c", "dTE_c",
              "nSpan", "dRootFrac", "dTipFrac", "closedSock", "rootCut",
-             "datSmooth"}
+             "datSmooth", "capDome"}
 MARCH_KEYS = {"firstLayer", "nLayers", "marchDist", "splay", "volSmoothIter",
               "volBlend", "volCoef", "cMax", "epsE", "epsI", "theta",
               "nConstantStart", "matchFactor", "autoMatch"}
@@ -354,8 +354,9 @@ def build(cfg, out, base="."):
 
     blocks = [(Xg, Yg, Zg)]
     if int(s.get("closedSock", 1)):
-        blocks.append(cap_tfi(sec2d[-1], nchord, nte, stations[-1], True))
-        blocks.append(cap_tfi(sec2d[0], nchord, nte, stations[0], False))
+        dome = float(s.get("capDome", 0.0))
+        blocks.append(cap_tfi(sec2d[-1], nchord, nte, stations[-1], True, dome))
+        blocks.append(cap_tfi(sec2d[0], nchord, nte, stations[0], False, dome))
 
     # ---- outward-orientation self check (pyHyp marches along t_i x t_j) ----
     P = np.stack([Xg, Yg, Zg], -1)
@@ -386,9 +387,13 @@ def build(cfg, out, base="."):
     return len(blocks)
 
 
-def cap_tfi(sec, nchord, nte, ystation, isTip):
+def cap_tfi(sec, nchord, nte, ystation, isTip, capDome=0.0):
     """Non-degenerate Coons-TFI cap; its boundary points are exact copies of
-    the main end perimeter (autoConnect/pointReduce stitchable)."""
+    the main end perimeter (autoConnect/pointReduce stitchable).
+    capDome > 0 bulges the cap INTERIOR outboard into a slightly rounded tip
+    (local half-thickness dome; 1.0 ~ a semicircular cross-section).  The
+    boundary points are untouched, so the closed-sock stitching and the
+    directed-edge normal check are unaffected."""
     C, T, chord, twist, zle = sec
     nth = nte + 2
     k = (nth - 1)//2
@@ -418,6 +423,12 @@ def cap_tfi(sec, nchord, nte, ystation, isTip):
     c2[-1, :] = C[seal]; t2[-1, :] = T[seal]
     Xh, Zh = place(c2, t2, chord, twist, zle)
     Yh = np.full_like(Xh, ystation)
+    if capDome > 0.0:
+        u = (np.arange(il)/(il - 1.0))[:, None]          # 0 = LE arc, 1 = seal
+        w = (2.0*np.arange(nth)/(nth - 1.0) - 1.0)[None, :]   # -1 lower, +1 up
+        halft = 0.5*(T[upper] - T[lower])[:, None]*chord      # local half-thick
+        dome = capDome*halft*np.sin(np.pi*u)*np.cos(0.5*np.pi*w)
+        Yh = Yh + (dome if isTip else -dome)
     if isTip:
         Xh = Xh[::-1].copy(); Yh = Yh[::-1].copy(); Zh = Zh[::-1].copy()
     return Xh, Yh, Zh

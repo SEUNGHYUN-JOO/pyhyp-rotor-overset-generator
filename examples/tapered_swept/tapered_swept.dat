@@ -4,40 +4,55 @@
 # LE_z moves the leading edge fore/aft (+z = toward the TE side), in METERS;
 # twist is applied afterwards about the local 0.25c.
 # ============================================================================
+
 nBlades    3
-R          1.0
+R          1          # tip radius [m]
 
 # ---- surface ----
-nChord     160
-nTE        7
-teCut      0.97
-dTE_c      0.003
-nSpan      60
-dTipFrac   0.005        # spanwise clustering at the tip
-closedSock 1
+nChord     160         # chordwise points per side
+nTE        7           # blunt-TE seal interior points, must be ODD
+teCut      0.97        # TE truncation (x/c)
+dTE_c      0.003       # TE chordwise spacing (x/c)
+#dLE_c      auto        # LE chordwise spacing (x/c); default auto = 0.16*r_LE/k (nose-radius scaled) (default)
+nSpan      60          # spanwise stations
+#dRootFrac  auto        # spanwise tanh clustering at the root (fraction); default uniform (default)
+dTipFrac   0.005       # spanwise tanh clustering at the tip (fraction); default uniform
+#rootCut    auto        # span start y/R; default = first SECTIONS r/R (default)
+closedSock 1           # 1: watertight sock with TFI caps / 0: open ends + splay
+#capDome    0           # rounded tip cap: 0 = flat .. ~1 = half-thickness dome (default)
+#datSmooth  5           # smoothing passes for tabulated airfoil files (default)
 
 # ---- march (pyHyp) ----
-firstLayer 3.0e-6
-nLayers    64
-marchDist  0.06
-autoMatch  1            # 1: force nLayers to match the background spacing / 0: use nLayers as written
+firstLayer 3e-06       # first wall spacing [m] (y+ target)
+nLayers    64          # marching layers (overridden when autoMatch 1)
+marchDist  0.06        # total march distance [m]
+autoMatch  1           # 1: force nLayers to match the background spacing / 0: use nLayers as written
+#matchFactor 0.9         # target outer cell = matchFactor * h_bg (default)
+#splay      0.25        # open-sock free-edge splay (default)
+#volSmoothIter 100         # pyHyp volume smoothing iterations (default)
+#volBlend   0.0005      # pyHyp volume blending (default)
+#volCoef    0.25        # pyHyp volume coefficient (default)
+#cMax       3           # pyHyp marching cMax (default)
+#epsE       1           # pyHyp explicit smoothing (default)
+#epsI       2           # pyHyp implicit smoothing (default)
+#theta      3           # pyHyp implicit blending (default)
+#nConstantStart 1           # layers marched at constant s0 (default)
 
-# ---- overset background mesh (background_mesh.py) -------------------------
-# All of these are optional; values below are the defaults (extents in R).
+# ---- overset background (background_mesh.py) ----
 bgSpacing  0.4         # refine-box spacing [tip chords]
-#bgGrowth   1.12         # spacing growth ratio outside the box
-#bgXmin     -4           # domain extents [R]; +x = wake/downstream
-#bgXmax     8
-#bgYmin     -4
-#bgYmax     4
-#bgZmin     -4
-#bgZmax     4
-#refXmin    -0.5         # refinement box [R]: 0.5R upstream, 2R wake,
-#refXmax    2.0          #  radius 1.2R
-#refYmin    -1.2
-#refYmax    1.2
-#refZmin    -1.2
-#refZmax    1.2
+#bgGrowth   1.12        # spacing growth ratio outside the box (default)
+#bgXmin     -4          # domain extents [R]; +x = wake/downstream (default)
+#bgXmax     8           # default 8
+#bgYmin     -4          # default -4
+#bgYmax     4           # default 4
+#bgZmin     -4          # default -4
+#bgZmax     4           # default 4
+#refXmin    -0.5        # refinement box [R]: 0.5R upstream (default)
+#refXmax    2           # 2R of wake downstream (default)
+#refYmin    -1.2        # radius 1.2R (default)
+#refYmax    1.2         # default 1.2
+#refZmin    -1.2        # default -1.2
+#refZmax    1.2         # default 1.2
 
 SECTIONS
 # r/R    chord[m]   twist[deg]  LE_z[m]  airfoil

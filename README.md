@@ -239,6 +239,15 @@ aggressive tests (few layers over a large `marchDist`) collapse instead.
   always out of the body.
 * Set `closedSock 0` to fall back to a single open-ended block whose free
   span edges pyHyp splays (quick tests; span ends are then not meshed).
+* **Rounded tip cap**: the caps are flat by default; `capDome` (0..~1) bulges
+  the cap INTERIOR outboard into a slightly rounded tip (a local
+  half-thickness dome, `capDome 1` ~ semicircular cross-section). Cap
+  boundary points are untouched, so the sock stitching and pyHyp's normal
+  check are unaffected (validated: Caradonna-Tung with `capDome 0.6`, final
+  Min Quality 0.41). For a true CAD-defined rounded cap you can also build
+  the skin externally (e.g. pyGeo's rounded-tip lifting surfaces, or project
+  onto a CAD tip) and feed the resulting multiblock PLOT3D skin straight to
+  `march.py` — the closed-sock topology rules in this README still apply.
 * **Known limitation** — cambered sections with large twist at the blade
   ENDS leave a small number of non-convex corner cells in the end-cap blocks
   near the LE (0 for symmetric sections; ~0.1% of cap cells for SC1095 at
