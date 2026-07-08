@@ -49,7 +49,8 @@ import numpy as np
 # input file
 # ---------------------------------------------------------------------------
 SURF_KEYS = {"nChord", "nTE", "teCut", "dLE_c", "dTE_c",
-             "nSpan", "dRootFrac", "dTipFrac", "closedSock", "rootCut"}
+             "nSpan", "dRootFrac", "dTipFrac", "closedSock", "rootCut",
+             "datSmooth"}
 MARCH_KEYS = {"firstLayer", "nLayers", "marchDist", "splay", "volSmoothIter",
               "volBlend", "volCoef", "cMax", "epsE", "epsI", "theta",
               "nConstantStart"}
@@ -106,8 +107,12 @@ def read_input(path):
 # ---------------------------------------------------------------------------
 # airfoil ordinates
 # ---------------------------------------------------------------------------
-def airfoil_ul(name, x, base=None):
-    """(yu, yl) thickness ordinates at chord fractions x."""
+def airfoil_ul(name, x, base=None, smooth=5):
+    """(yu, yl) ordinates at chord fractions x.  For tabulated (.dat) data,
+    'smooth' endpoint-preserving Laplacian passes are applied to the raw
+    ordinates first: digitised coordinates carry point-to-point noise that a
+    cubic spline reproduces faithfully, and the hyperbolic march inverts in
+    the resulting micro-concavities (seen with UIUC sc1095.dat)."""
     nm = str(name).strip().lower()
     if nm.startswith("naca") and len(nm) == 8 and nm[4:].isdigit():
         code = nm[4:]
@@ -130,13 +135,59 @@ def airfoil_ul(name, x, base=None):
             except ValueError:
                 continue
     P = np.array(pts)
-    P[:, 0] -= P[:, 0].min()
-    P[:, 0] /= P[:, 0].max()
-    ile = int(np.argmin(P[:, 0]))
-    up = P[:ile+1][::-1]
-    lo = P[ile:]
-    return (np.interp(x, up[:, 0], up[:, 1]),
-            np.interp(x, lo[:, 0], lo[:, 1]))
+    # Format auto-detection (UIUC database mixes the two):
+    #   Lednicer: first numeric line is the POINT COUNTS (values > 1.1),
+    #             then upper LE->TE, then lower LE->TE
+    #   Selig   : one continuous loop TE -> LE -> TE
+    if P[0, 0] > 1.1 and P[0, 1] > 1.1:
+        nup = int(round(P[0, 0])); nlo = int(round(P[0, 1]))
+        up = P[1:1+nup]
+        lo = P[1+nup:1+nup+nlo]
+    else:
+        xmin = P[:, 0].min()
+        ile = int(np.argmin(P[:, 0]))
+        up = P[:ile+1][::-1]
+        lo = P[ile:]
+    for S in (up, lo):
+        S[:, 0] -= S[:, 0].min()
+    scale = max(up[:, 0].max(), lo[:, 0].max())
+    up = up/scale; lo = lo/scale
+    for S in (up, lo):
+        for _ in range(int(smooth)):
+            S[1:-1, 1] += 0.25*(S[:-2, 1] + S[2:, 1] - 2*S[1:-1, 1])
+    # cubic-spline resampling in u = sqrt(x): tabulated data is far coarser
+    # than the LE point spacing used here, and LINEAR interpolation leaves a
+    # faceted nose that collapses the hyperbolic march (y ~ sqrt(x) at the
+    # nose becomes linear in u, so the spline stays smooth and bounded)
+    return (_cubic(np.sqrt(np.abs(up[:, 0])), up[:, 1], np.sqrt(x)),
+            _cubic(np.sqrt(np.abs(lo[:, 0])), lo[:, 1], np.sqrt(x)))
+
+
+def _cubic(xd, yd, xq):
+    """Natural cubic spline through (xd, yd), evaluated at xq (numpy only).
+    xd must be strictly increasing; duplicates are collapsed."""
+    xd = np.asarray(xd, float); yd = np.asarray(yd, float)
+    keep = np.concatenate([[True], np.diff(xd) > 1e-12])
+    xd = xd[keep]; yd = yd[keep]
+    n = len(xd)
+    if n < 3:
+        return np.interp(xq, xd, yd)
+    h = np.diff(xd)
+    # solve for second derivatives M (natural BCs) via Thomas algorithm
+    a = h[:-1].copy(); b = 2.0*(h[:-1] + h[1:]); c = h[1:].copy()
+    d = 6.0*((yd[2:] - yd[1:-1])/h[1:] - (yd[1:-1] - yd[:-2])/h[:-1])
+    for i in range(1, n-2):
+        w = a[i]/b[i-1]
+        b[i] -= w*c[i-1]
+        d[i] -= w*d[i-1]
+    M = np.zeros(n)
+    M[n-2] = d[-1]/b[-1]
+    for i in range(n-3, 0, -1):
+        M[i] = (d[i-1] - c[i-1]*M[i+1])/b[i-1]
+    j = np.clip(np.searchsorted(xd, xq) - 1, 0, n-2)
+    t = xq - xd[j]
+    return (yd[j] + t*((yd[j+1] - yd[j])/h[j] - h[j]*(2*M[j] + M[j+1])/6.0)
+            + t*t*M[j]/2.0 + t*t*t*(M[j+1] - M[j])/(6.0*h[j]))
 
 
 # ---------------------------------------------------------------------------
@@ -188,6 +239,7 @@ class Planform:
         self.lez = np.array([float(s["LE_z"]) for s in secs])
         self.airfoils = [s["airfoil"] for s in secs]
         self.base = base
+        self.smooth = int(cfg.get("surface", {}).get("datSmooth", 5))
 
     def at(self, rR, xc):
         rR = float(np.clip(rR, self.rR[0], self.rR[-1]))
@@ -198,11 +250,12 @@ class Planform:
         chord = (1-w)*self.chord[i] + w*self.chord[i+1]
         twist = (1-w)*self.twist[i] + w*self.twist[i+1]
         lez = ((1-w)*self.lez[i] + w*self.lez[i+1])*chord
-        yu0, yl0 = airfoil_ul(self.airfoils[i], xc, self.base)
+        yu0, yl0 = airfoil_ul(self.airfoils[i], xc, self.base, self.smooth)
         if self.airfoils[i+1] == self.airfoils[i] or w == 0.0:
             yu, yl = yu0, yl0
         else:
-            yu1, yl1 = airfoil_ul(self.airfoils[i+1], xc, self.base)
+            yu1, yl1 = airfoil_ul(self.airfoils[i+1], xc, self.base,
+                                  self.smooth)
             yu = (1-w)*yu0 + w*yu1
             yl = (1-w)*yl0 + w*yl1
         return chord, twist, lez, yu, yl
@@ -211,7 +264,7 @@ class Planform:
 # ---------------------------------------------------------------------------
 # perimeter (closed O-loop) in (chord-fraction, thickness) space
 # ---------------------------------------------------------------------------
-def chord_stations(surf):
+def chord_stations(surf, rle=0.0159):
     nchord = int(surf.get("nChord", 160))
     nte = int(surf.get("nTE", 7))
     if (nte + 2) % 2 == 0:
@@ -221,7 +274,13 @@ def chord_stations(surf):
     dle = surf.get("dLE_c", None)
     dte = surf.get("dTE_c", 0.003)
     if dle is None:
-        dle = 2.5e-3/max(1, k)
+        # The cap nose arc spans k points each side of the LE; the march folds
+        # there unless the arc stays well inside the nose radius.  Scale the
+        # LE spacing with the (estimated) nose radius so arc/r_LE ~ 0.16, the
+        # ratio validated on NACA0012 (r_LE = 0.0159 c -> dLE ~ 6.2e-4 c).
+        dle = min(0.16*rle, 2.5e-3)/max(1, k)
+        sys.stderr.write("[blade_surface] r_LE ~ %.4g c -> dLE_c = %.3g\n"
+                         % (rle, dle))
     xc = tecut*tanh_dist(nchord, float(dle)/tecut, float(dte)/tecut)
     return xc, nchord, nte, tecut
 
@@ -253,10 +312,22 @@ def place(C, T, chord, twistDeg, zle):
     return X, Z
 
 
+def nose_radius(pf):
+    """Smallest leading-edge radius (in chords) over the section airfoils,
+    estimated from the thickness at x0:  t ~ 2 sqrt(2 r x)  ->  r = t^2/(8 x)."""
+    x0 = 0.002
+    x = np.array([x0])
+    r = []
+    for a in set(pf.airfoils):
+        yu, yl = airfoil_ul(a, x, pf.base, pf.smooth)
+        r.append(float(yu[0] - yl[0])**2/(8.0*x0))
+    return max(1e-4, min(r))
+
+
 def build(cfg, out, base="."):
     pf = Planform(cfg, base)
     s = cfg.get("surface", {})
-    xc, nchord, nte, tecut = chord_stations(s)
+    xc, nchord, nte, tecut = chord_stations(s, nose_radius(pf))
     R = pf.R
     rR0 = float(s.get("rootCut", pf.rR[0]))
     nspan = int(s.get("nSpan", 60))

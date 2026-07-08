@@ -79,9 +79,19 @@ SECTIONS
 | `LE_z` | fore/aft LE position along +z, in local chords (sweep) |
 | `airfoil` | `nacaXXXX` (4-digit) or path to a Selig-format `.dat` file |
 
-See `examples/rotor_23012.dat` for a blade built from a Selig airfoil file
-(`examples/naca23012.dat` — a 5-digit section, hence not expressible as
-`nacaXXXX`); the path is resolved relative to the input file.
+Airfoil files: both **Selig** (one TE→LE→TE loop) and **Lednicer** (point
+counts, then upper/lower LE→TE) formats are auto-detected, so files from the
+[UIUC Airfoil Coordinates Database](https://m-selig.ae.illinois.edu/ads/coord_database.html)
+work directly. Tabulated ordinates are resampled with a cubic spline in
+√x (smooth nose) after `datSmooth` (default 5) endpoint-preserving Laplacian
+passes — digitised data carries point-to-point noise that otherwise folds the
+hyperbolic march. Paths are resolved relative to the input file.
+
+Examples using airfoil files:
+* `examples/rotor_23012.dat` — NACA 23012 (5-digit, generated analytically,
+  `examples/naca23012.dat`)
+* `examples/rotor_sc1095.dat` — Sikorsky SC1095 (UH-60 section,
+  `examples/sc1095.dat` downloaded from the UIUC database, Lednicer format)
 
 Between stations chord/twist/LE_z vary linearly and airfoil ordinates are
 blended linearly. Optional keywords: `dLE_c` (LE chordwise spacing),
@@ -135,6 +145,12 @@ aggressive tests (few layers over a large `marchDist`) collapse instead.
   always out of the body.
 * Set `closedSock 0` to fall back to a single open-ended block whose free
   span edges pyHyp splays (quick tests; span ends are then not meshed).
+* **Known limitation** — cambered sections with large twist at the blade
+  ENDS leave a small number of non-convex corner cells in the end-cap blocks
+  near the LE (0 for symmetric sections; ~0.1% of cap cells for SC1095 at
+  10° root twist). The march still completes with the usual final quality
+  (~0.42); check whether your solver tolerates these cells, reduce the twist
+  at the root station, or use `closedSock 0` if the span ends are not needed.
 
 ## Requirements
 
