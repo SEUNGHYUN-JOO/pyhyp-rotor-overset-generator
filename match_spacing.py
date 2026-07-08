@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -----------------------------------------------------------------------------
+#  Author: JOO Seunghyun <chlrh45351@gmail.com>  (2026-07)
 #  match_spacing.py — match the OUTERMOST wall-normal (i-direction) cell size
 #  of the blade BL mesh to the background refinement-zone spacing (the overset
 #  donor-quality rule: outer blade cell equal to or slightly smaller than the

@@ -1,5 +1,6 @@
 #!/bin/bash
 # -----------------------------------------------------------------------------
+#  Author: JOO Seunghyun <chlrh45351@gmail.com>  (2026-07)
 #  make_rotor.sh — one-shot rotor mesh generation.  Outputs are written NEXT TO
 #  the input file (the per-rotor example folder):
 #      bladeSurf.fmt      single-blade skin (PLOT3D surface)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -----------------------------------------------------------------------------
+#  Author: JOO Seunghyun <chlrh45351@gmail.com>  (2026-07)
 #  march.py — extrude a blade_surface.py skin into a wall-resolved structured
 #  boundary-layer volume with pyHyp (hyperbolic marching), then reorder the
 #  result so that

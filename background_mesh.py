@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -----------------------------------------------------------------------------
+#  Author: JOO Seunghyun <chlrh45351@gmail.com>  (2026-07)
 #  background_mesh.py — structured Cartesian BACKGROUND mesh for overset
 #  (chimera) rotor setups, from the same rotor .dat input.
 #

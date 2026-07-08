@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -----------------------------------------------------------------------------
+#  Author: JOO Seunghyun <chlrh45351@gmail.com>  (2026-07)
 #  blade_surface.py — structured multiblock PLOT3D surface of a rotor/wing
 #  blade skin (closed watertight "sock") for pyHyp hyperbolic extrusion.
 #

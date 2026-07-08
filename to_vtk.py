@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -----------------------------------------------------------------------------
+#  Author: JOO Seunghyun <chlrh45351@gmail.com>  (2026-07)
 #  to_vtk.py — convert a (multiblock) formatted PLOT3D volume/surface to VTK
 #  XML structured grids (.vts + a .vtm collection) for ParaView.
 #
