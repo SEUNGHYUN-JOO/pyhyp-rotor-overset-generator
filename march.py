@@ -11,7 +11,7 @@
 #  Run under a python that has pyhyp (e.g. an MDO-framework conda env):
 #      python march.py <input.dat> <surf.fmt> <outVol.xyz>
 #
-#  march keywords in the .dat input (all lengths in METRES):
+#  march keywords in the .dat input (all lengths in METERS):
 #      firstLayer : first cell wall spacing (y+ target)
 #      nLayers    : number of marching layers
 #      marchDist  : total marching distance

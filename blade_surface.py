@@ -26,7 +26,7 @@
 #      1.00    0.1905    8.0         0.0      naca0012
 #
 #  Per-section planform: chord, twist and the fore/aft LE position LE_z
-#  (in METRES, along +z) vary linearly between stations; airfoil
+#  (in METERS, along +z) vary linearly between stations; airfoil
 #  ordinates ("nacaXXXX" or a Selig .dat path, relative to the input file)
 #  are blended linearly.
 #

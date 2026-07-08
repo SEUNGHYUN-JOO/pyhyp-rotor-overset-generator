@@ -1,7 +1,7 @@
 # ============================================================================
 # Generic tapered, swept, twisted blade with an airfoil transition —
 # demonstrates the per-section planform table.
-# LE_z moves the leading edge fore/aft (+z = toward the TE side), in METRES;
+# LE_z moves the leading edge fore/aft (+z = toward the TE side), in METERS;
 # twist is applied afterwards about the local 0.25c.
 # ============================================================================
 nBlades    3

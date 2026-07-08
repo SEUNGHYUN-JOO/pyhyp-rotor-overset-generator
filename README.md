@@ -31,7 +31,7 @@ gmsh/snappy-style extruded prisms struggle to produce robust y+≈1 layers on
 thin lifting surfaces (self-intersection at the TE, ~60° non-orthogonality
 for tetrahedral BLs). A pyHyp hyperbolic march from a structured skin gives
 orthogonal hexahedral layers (typically **~2° mean non-orthogonality**) with a
-first-cell spacing you set directly in metres. The hard part — a watertight
+first-cell spacing you set directly in meters. The hard part — a watertight
 ("closed sock") surface topology that pyHyp accepts — is what this package
 automates.
 
@@ -50,7 +50,7 @@ automates.
 
 * **twist** is applied about the local **quarter chord (0.25 c)**;
   positive twist = nose-up (LE rotates toward −x)
-* **LE_z** moves the leading edge fore/aft along +z (sweep), in **metres**,
+* **LE_z** moves the leading edge fore/aft along +z (sweep), in **meters**,
   *before* the twist rotation
 * volume output index order: **i = wall-normal** (i=1 on the wall),
   j = airfoil perimeter (TE_lower → LE → TE_upper → blunt-TE seal),
@@ -101,7 +101,7 @@ SECTIONS
 | `r/R` | span station y/R |
 | `chord` | local chord [m] |
 | `twist` | nose-up twist about the local 0.25c [deg] |
-| `LE_z` | fore/aft LE position along +z, in METRES (sweep) |
+| `LE_z` | fore/aft LE position along +z, in METERS (sweep) |
 | `airfoil` | `nacaXXXX` (4-digit) or path to a Selig-format `.dat` file |
 
 Airfoil files: both **Selig** (one TE→LE→TE loop) and **Lednicer** (point
