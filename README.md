@@ -1,4 +1,4 @@
-# pyhyp-rotor-overset-mesh
+# pyhyp-rotor-overset-mesh-generator
 
 Structured overset (chimera) mesh generation for rotors with
 [pyHyp](https://github.com/mdolab/pyhyp): a wall-resolved (y+ ≈ 1)
