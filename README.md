@@ -68,6 +68,7 @@ examples/
     bladeSurf.fmt           # generated: single-blade skin
     bladeVol.xyz            # generated: single-blade volume
     rotorVol.xyz            # generated: full rotor (nBlades copies about +x)
+    backgroundVol.xyz       # generated: structured overset background
     *_vtk.vtm               # generated: ParaView
 ```
 
@@ -138,6 +139,29 @@ volume (main O-grid + tip cap + root cap) in the i=wall-normal ordering.
 With `nBlades > 1` the single-blade volume is additionally replicated by
 rotation about the rotor axis (+x) into `rotorVol.xyz` (nBlades x 3 blocks);
 the SURFACE stays single-blade — only one blade is ever marched.
+
+## Overset background mesh
+
+`background_mesh.py` (also run by `make_rotor.sh`) builds a structured
+single-block Cartesian background for overset assemblies from the same input:
+a **refinement box** around the rotor with uniform spacing given in **tip
+chords** (default `bgSpacing 0.15`), growing geometrically away from the box
+(`bgGrowth`, default 1.12) out to the domain boundary.
+
+```
+bgSpacing  0.15         # refine-box spacing [tip chords]
+bgGrowth   1.12         # spacing growth ratio outside the box
+bgXmin -4   bgXmax 8    # domain extents [R]  (+x = wake/downstream)
+bgYmin -4   bgYmax 4
+bgZmin -4   bgZmax 4
+refXmin -0.25 refXmax 1.0     # refinement box [R] (defaults wrap the disk
+refYmin -1.15 refYmax 1.15    #  and the near wake)
+refZmin -1.15 refZmax 1.15
+```
+
+Mind the cell count for small tip chords: at `bgSpacing 0.15` a c_tip = 0.07 m
+blade on R = 1 m gives ~15M background cells; the small-chord examples ship
+with `bgSpacing 0.4` for compactness.
 
 Note on the march log: the first few levels near the blunt-TE cap corners can
 report `Min Quality -1` with tiny negative volumes — the march recovers within

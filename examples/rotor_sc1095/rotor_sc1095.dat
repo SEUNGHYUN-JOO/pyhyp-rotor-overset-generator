@@ -22,6 +22,10 @@ firstLayer 3.0e-6
 nLayers    72
 marchDist  0.11
 
+# ---- overset background (structured Cartesian; see background_mesh.py) ----
+bgSpacing  0.4          # refine-box spacing [tip chords] (default 0.15; this
+                        # blade has a small tip chord -> coarser for a compact example)
+
 SECTIONS
 # r/R    chord[m]   twist[deg]  LE_z[m]  airfoil
 0.20     0.110      10.0        0.0      airfoil/sc1095.dat

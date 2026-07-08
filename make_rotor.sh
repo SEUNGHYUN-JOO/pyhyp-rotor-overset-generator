@@ -5,6 +5,7 @@
 #      bladeSurf.fmt      single-blade skin (PLOT3D surface)
 #      bladeVol.xyz       single-blade BL volume (i = wall-normal)
 #      rotorVol.xyz       full rotor (nBlades copies rotated about +x)
+#      backgroundVol.xyz  structured Cartesian overset background (refine box)
 #      *_vtk.vtm          ParaView versions
 #
 #  Usage:  make_rotor.sh <rotor.dat> [pyhyp-python]
@@ -21,5 +22,7 @@ python3 "$HERE/blade_surface.py" "$IN" "$DIR/bladeSurf.fmt"
 python3 "$HERE/to_vtk.py" "$DIR/bladeSurf.fmt" "$DIR/bladeSurf_vtk"
 python3 "$HERE/to_vtk.py" "$DIR/bladeVol.xyz" "$DIR/bladeVol_vtk"
 [ -f "$DIR/rotorVol.xyz" ] && python3 "$HERE/to_vtk.py" "$DIR/rotorVol.xyz" "$DIR/rotorVol_vtk"
+python3 "$HERE/background_mesh.py" "$IN" "$DIR/backgroundVol.xyz"
+python3 "$HERE/to_vtk.py" "$DIR/backgroundVol.xyz" "$DIR/backgroundVol_vtk"
 rm -f "$DIR/bladeVol.xyz.raw"
 echo "outputs in $DIR"

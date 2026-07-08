@@ -54,6 +54,9 @@ SURF_KEYS = {"nChord", "nTE", "teCut", "dLE_c", "dTE_c",
 MARCH_KEYS = {"firstLayer", "nLayers", "marchDist", "splay", "volSmoothIter",
               "volBlend", "volCoef", "cMax", "epsE", "epsI", "theta",
               "nConstantStart"}
+BG_KEYS = {"bgSpacing", "bgGrowth", "bgXmin", "bgXmax", "bgYmin", "bgYmax",
+           "bgZmin", "bgZmax", "refXmin", "refXmax", "refYmin", "refYmax",
+           "refZmin", "refZmax"}
 
 
 def _num(tok):
@@ -68,7 +71,8 @@ def _num(tok):
 
 def read_input(path):
     """Parse the .dat input -> config dict (planform/surface/march)."""
-    cfg = {"planform": {"sections": []}, "surface": {}, "march": {}}
+    cfg = {"planform": {"sections": []}, "surface": {}, "march": {},
+           "background": {}}
     in_sections = False
     for raw in open(path):
         line = raw.split("#")[0].strip()
@@ -86,6 +90,8 @@ def read_input(path):
                 cfg["surface"][k] = v
             elif k in MARCH_KEYS:
                 cfg["march"][k] = v
+            elif k in BG_KEYS:
+                cfg["background"][k] = v
             elif k == "R":
                 cfg["planform"]["R"] = float(v)
             elif k == "nBlades":
