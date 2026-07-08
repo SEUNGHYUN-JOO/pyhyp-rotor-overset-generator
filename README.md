@@ -79,6 +79,16 @@ python3 blade_surface.py examples/caradonna_tung.json skin.fmt
 and a positive `Min Quality`. The result `bladeVol.xyz` is a 3-block PLOT3D
 volume (main O-grid + tip cap + root cap) in the i=wall-normal ordering.
 
+```bash
+# 3. optional: ParaView-ready VTK (no VTK library required)
+python3 to_vtk.py bladeVol.xyz          # -> bladeVol.vtm + bladeVol/block*.vts
+```
+
+Note on the march log: the first few levels near the blunt-TE cap corners can
+report `Min Quality -1` with tiny negative volumes — the march recovers within
+~30 levels **provided the growth ratio stays moderate (~1.15)**. Very
+aggressive tests (few layers over a large `marchDist`) collapse instead.
+
 ## Topology notes (the parts that are easy to get wrong)
 
 * **Closed sock**: the skin is a watertight multiblock quilt — a main O-grid
