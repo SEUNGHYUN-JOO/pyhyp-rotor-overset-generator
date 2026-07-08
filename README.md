@@ -87,18 +87,53 @@ examples/
 nBlades    2            # full-rotor replication about +x (1 = single blade)
 R          1.143        # tip radius [m]
 
-nChord     200          # chordwise points per side
-nTE        7            # blunt-TE seal interior points (must be ODD)
-teCut      0.96         # TE truncation (x/c)
-dTE_c      0.003        # chordwise spacing at the TE (x/c)
-nSpan      70           # spanwise stations
-closedSock 1
+# ---- surface ----
+nChord     200          # chordwise points per side                (default 160)
+nTE        7            # blunt-TE seal interior points, ODD       (default 7)
+teCut      0.96         # TE truncation (x/c)                      (default 0.97)
+dTE_c      0.003        # chordwise spacing at the TE (x/c)        (default 0.003)
+#dLE_c     auto         # LE chordwise spacing (x/c); default auto = 0.16*r_LE/k
+nSpan      70           # spanwise stations                        (default 60)
+#dRootFrac auto         # spanwise tanh clustering at the root; default uniform
+#dTipFrac  auto         # spanwise tanh clustering at the tip;  default uniform
+#rootCut   auto         # span start y/R; default = first SECTIONS r/R
+closedSock 1            # 1: watertight TFI-cap sock / 0: open + splay (default 1)
+capDome    0.25         # rounded tip cap, 0 flat .. ~1 half-thickness dome
+                        #   (default 0; 0.2-0.4 recommended)
+#datSmooth 5            # smoothing passes for tabulated airfoils  (default 5)
 
+# ---- march (pyHyp) ----
 firstLayer 2.78e-6      # first wall spacing [m]  (y+ target)
-nLayers    76
+nLayers    76           # marching layers (overridden when autoMatch 1)
 marchDist  0.19         # total march distance [m]
 autoMatch  1            # 1: force nLayers so the outer wall-normal cell
                         #    matches the background refine spacing / 0: off
+#matchFactor 0.9        # target outer cell = matchFactor * h_bg   (default 0.9)
+#splay     0.25         # open-sock free-edge splay                (default 0.25)
+#volSmoothIter 100      # pyHyp volume smoothing iterations        (default 100)
+#volBlend  0.0005       # pyHyp volume blending                    (default 0.0005)
+#volCoef   0.25         # pyHyp volume coefficient                 (default 0.25)
+#cMax      3.0          # pyHyp marching cMax                      (default 3.0)
+#epsE      1.0          # pyHyp explicit smoothing                 (default 1.0)
+#epsI      2.0          # pyHyp implicit smoothing                 (default 2.0)
+#theta     3.0          # pyHyp implicit blending                  (default 3.0)
+#nConstantStart 1       # layers marched at constant s0            (default 1)
+
+# ---- overset background (background_mesh.py) ----
+#bgSpacing 0.15         # refine-box spacing [tip chords]          (default 0.15)
+#bgGrowth  1.12         # spacing growth ratio outside the box     (default 1.12)
+#bgXmin    -4           # domain extents [R]; +x = wake/downstream (defaults:
+#bgXmax    8            #   x in [-4, 8], y and z in [-4, 4])
+#bgYmin    -4
+#bgYmax    4
+#bgZmin    -4
+#bgZmax    4
+#refXmin   -0.5         # refinement box [R] (defaults: 0.5R upstream,
+#refXmax   2.0          #   2R of wake downstream, radius 1.2R)
+#refYmin   -1.2
+#refYmax   1.2
+#refZmin   -1.2
+#refZmax   1.2
 
 SECTIONS
 # r/R    chord[m]   twist[deg]  LE_z[m]  airfoil
@@ -128,10 +163,8 @@ Examples using airfoil files:
   the UIUC database, Lednicer format)
 
 Between stations chord/twist/LE_z vary linearly and airfoil ordinates are
-blended linearly. Optional keywords: `dLE_c` (LE chordwise spacing),
-`dRootFrac`/`dTipFrac` (spanwise tanh clustering), `rootCut`, `datSmooth`,
-`splay`, `volSmoothIter`, `volBlend`, `cMax`, `epsE`, `epsI`, `theta`,
-`nConstantStart`, `autoMatch` (0/1, see below), `matchFactor` (default 0.9).
+blended linearly. Commented keywords above show every optional knob with its
+default; the same fully annotated block ships in every `examples/*/*.dat`.
 
 ## Usage
 
