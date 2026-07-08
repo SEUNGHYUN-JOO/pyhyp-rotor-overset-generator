@@ -20,6 +20,23 @@ firstLayer 2.78e-6      # first wall spacing [m]  (y+ ~ 1)
 nLayers    76
 marchDist  0.19         # [m] (~1 chord)
 
+# ---- overset background mesh (background_mesh.py) -------------------------
+# All of these are optional; values below are the defaults (extents in R).
+#bgSpacing  0.15         # refine-box spacing [tip chords]
+#bgGrowth   1.12         # spacing growth ratio outside the box
+#bgXmin     -4           # domain extents [R]; +x = wake/downstream
+#bgXmax     8
+#bgYmin     -4
+#bgYmax     4
+#bgZmin     -4
+#bgZmax     4
+#refXmin    -0.5         # refinement box [R]: 0.5R upstream, 2R wake,
+#refXmax    2.0          #  radius 1.2R
+#refYmin    -1.2
+#refYmax    1.2
+#refZmin    -1.2
+#refZmax    1.2
+
 SECTIONS
 # r/R    chord[m]   twist[deg]  LE_z[m]  airfoil
 0.19     0.1905     8.0         0.0      naca0012
