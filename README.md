@@ -135,6 +135,15 @@ blended linearly. Optional keywords: `dLE_c` (LE chordwise spacing),
 
 ## Usage
 
+One-shot (surface -> match advisory -> march -> full rotor -> background -> VTK,
+outputs written next to the input file):
+
+```bash
+PYHYP_PYTHON=<python-with-pyhyp> ./make_rotor.sh examples/caradonna_tung/caradonna_tung.dat
+```
+
+Or step by step:
+
 ```bash
 # 1. surface (any python3 + numpy)
 python3 blade_surface.py examples/caradonna_tung/caradonna_tung.dat skin.fmt
