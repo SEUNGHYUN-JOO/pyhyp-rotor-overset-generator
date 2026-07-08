@@ -16,9 +16,9 @@
 #      bgXmin -4   bgXmax 8    # domain (R units; +x = downstream/wake)
 #      bgYmin -4   bgYmax 4
 #      bgZmin -4   bgZmax 4
-#      refXmin -0.25 refXmax 1.0    # refinement box (R units)
-#      refYmin -1.15 refYmax 1.15
-#      refZmin -1.15 refZmax 1.15
+#      refXmin -0.5  refXmax 2.0    # refinement box (R units)
+#      refYmin -1.2  refYmax 1.2
+#      refZmin -1.2  refZmax 1.2
 #
 #  Usage:  background_mesh.py <rotor.dat> <out.xyz>
 # -----------------------------------------------------------------------------
@@ -71,8 +71,8 @@ def build(cfg, out, base="."):
            (("bgXmin", -4), ("bgXmax", 8), ("bgYmin", -4), ("bgYmax", 4),
             ("bgZmin", -4), ("bgZmax", 4))]
     ref = [float(bg.get(k, d))*R for k, d in
-           (("refXmin", -0.25), ("refXmax", 1.0), ("refYmin", -1.15),
-            ("refYmax", 1.15), ("refZmin", -1.15), ("refZmax", 1.15))]
+           (("refXmin", -0.5), ("refXmax", 2.0), ("refYmin", -1.2),
+            ("refYmax", 1.2), ("refZmin", -1.2), ("refZmax", 1.2))]
 
     xs = stretch_axis(dom[0], dom[1], ref[0], ref[1], h0, ratio)
     ys = stretch_axis(dom[2], dom[3], ref[2], ref[3], h0, ratio)

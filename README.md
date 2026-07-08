@@ -154,9 +154,9 @@ bgGrowth   1.12         # spacing growth ratio outside the box
 bgXmin -4   bgXmax 8    # domain extents [R]  (+x = wake/downstream)
 bgYmin -4   bgYmax 4
 bgZmin -4   bgZmax 4
-refXmin -0.25 refXmax 1.0     # refinement box [R] (defaults wrap the disk
-refYmin -1.15 refYmax 1.15    #  and the near wake)
-refZmin -1.15 refZmax 1.15
+refXmin -0.5  refXmax 2.0     # refinement box [R]: 0.5R upstream, 2R of
+refYmin -1.2  refYmax 1.2     #  wake downstream, radius 1.2R
+refZmin -1.2  refZmax 1.2
 ```
 
 Mind the cell count for small tip chords: at `bgSpacing 0.15` a c_tip = 0.07 m
