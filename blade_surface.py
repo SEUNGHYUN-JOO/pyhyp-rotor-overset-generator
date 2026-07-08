@@ -88,6 +88,8 @@ def read_input(path):
                 cfg["march"][k] = v
             elif k == "R":
                 cfg["planform"]["R"] = float(v)
+            elif k == "nBlades":
+                cfg["planform"]["nBlades"] = int(v)
             else:
                 sys.stderr.write("[blade_surface] WARNING: unknown key '%s'\n" % k)
         else:

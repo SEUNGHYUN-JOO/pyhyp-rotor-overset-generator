@@ -5,6 +5,7 @@
 #   https://m-selig.ae.illinois.edu/ads/coord/sc1095.dat
 # Constant chord, -12 deg equivalent linear washout over the span.
 # ============================================================================
+nBlades    4
 R          2.0
 
 # ---- surface ----
@@ -23,5 +24,5 @@ marchDist  0.11
 
 SECTIONS
 # r/R    chord[m]   twist[deg]  LE_z[c]  airfoil
-0.20     0.110      10.0        0.0      sc1095.dat
-1.00     0.110      -2.0        0.0      sc1095.dat
+0.20     0.110      10.0        0.0      airfoil/sc1095.dat
+1.00     0.110      -2.0        0.0      airfoil/sc1095.dat

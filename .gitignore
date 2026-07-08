@@ -4,3 +4,6 @@
 *.cgns
 *.log
 __pycache__/
+*_vtk/
+*.vtm
+*.vts

@@ -4,6 +4,7 @@
 # LE_z moves the leading edge fore/aft (+z = toward the TE side) in units of
 # the LOCAL chord; twist is applied afterwards about the local 0.25c.
 # ============================================================================
+nBlades    3
 R          1.0
 
 # ---- surface ----

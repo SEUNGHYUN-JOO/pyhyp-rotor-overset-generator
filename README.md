@@ -10,9 +10,16 @@ convert/import it into OpenFOAM, SU2, CGNS-based codes, or use it as the
 near-body component of an overset (chimera) setup.
 
 ```
-blade.dat ──▶ blade_surface.py ──▶ skin.fmt ──▶ march.py (pyHyp) ──▶ vol.xyz
-               (closed sock,                     (hyperbolic BL,
-                multiblock surface)               i = wall-normal)
+rotor.dat ──▶ blade_surface.py ──▶ skin.fmt ──▶ march.py (pyHyp) ──▶ bladeVol.xyz
+               (closed sock,                     (hyperbolic BL,        │ nBlades > 1
+                multiblock surface)               i = wall-normal)      ▼
+                                                                   rotorVol.xyz
+```
+
+One-shot (outputs land next to the input file):
+
+```bash
+PYHYP_PYTHON=<python-with-pyhyp> ./make_rotor.sh examples/rotor_sc1095/rotor_sc1095.dat
 ```
 
 ## Why
@@ -49,9 +56,23 @@ automates.
 ## Input file
 
 One plain-text `.dat` file: keyword lines followed by a `SECTIONS` table
-(`#` starts a comment — see `examples/`):
+(`#` starts a comment). Examples are organised one folder per rotor, with
+airfoil coordinate files in an `airfoil/` subfolder; generated meshes are
+written into the rotor folder (and are git-ignored):
 
 ```
+examples/
+  rotor_sc1095/
+    rotor_sc1095.dat        # this input file
+    airfoil/sc1095.dat      # airfoil coordinates (paths relative to input)
+    bladeSurf.fmt           # generated: single-blade skin
+    bladeVol.xyz            # generated: single-blade volume
+    rotorVol.xyz            # generated: full rotor (nBlades copies about +x)
+    *_vtk.vtm               # generated: ParaView
+```
+
+```
+nBlades    2            # full-rotor replication about +x (1 = single blade)
 R          1.143        # tip radius [m]
 
 nChord     200          # chordwise points per side
@@ -88,10 +109,9 @@ passes — digitised data carries point-to-point noise that otherwise folds the
 hyperbolic march. Paths are resolved relative to the input file.
 
 Examples using airfoil files:
-* `examples/rotor_23012.dat` — NACA 23012 (5-digit, generated analytically,
-  `examples/naca23012.dat`)
-* `examples/rotor_sc1095.dat` — Sikorsky SC1095 (UH-60 section,
-  `examples/sc1095.dat` downloaded from the UIUC database, Lednicer format)
+* `examples/rotor_23012/` — NACA 23012 (5-digit, generated analytically)
+* `examples/rotor_sc1095/` — Sikorsky SC1095 (UH-60 section, downloaded from
+  the UIUC database, Lednicer format)
 
 Between stations chord/twist/LE_z vary linearly and airfoil ordinates are
 blended linearly. Optional keywords: `dLE_c` (LE chordwise spacing),
@@ -103,18 +123,21 @@ blended linearly. Optional keywords: `dLE_c` (LE chordwise spacing),
 
 ```bash
 # 1. surface (any python3 + numpy)
-python3 blade_surface.py examples/caradonna_tung.dat skin.fmt
+python3 blade_surface.py examples/caradonna_tung/caradonna_tung.dat skin.fmt
 
 # 2. march (a python with pyHyp installed, e.g. the MDO-lab / DAFoam conda env)
-<pyhyp-python> march.py examples/caradonna_tung.dat skin.fmt bladeVol.xyz
+<pyhyp-python> march.py examples/caradonna_tung/caradonna_tung.dat skin.fmt bladeVol.xyz
 
 # 3. optional: ParaView-ready VTK (no VTK library required)
 python3 to_vtk.py bladeVol.xyz          # -> bladeVol.vtm + bladeVol/block*.vts
 ```
 
 `march.py` prints pyHyp's quality table; look for `Normals are consistent!`
-and a positive `Min Quality`. The result is a 3-block PLOT3D volume (main
-O-grid + tip cap + root cap) in the i=wall-normal ordering.
+and a positive `Min Quality`. The single-blade result is a 3-block PLOT3D
+volume (main O-grid + tip cap + root cap) in the i=wall-normal ordering.
+With `nBlades > 1` the single-blade volume is additionally replicated by
+rotation about the rotor axis (+x) into `rotorVol.xyz` (nBlades x 3 blocks);
+the SURFACE stays single-blade — only one blade is ever marched.
 
 Note on the march log: the first few levels near the blunt-TE cap corners can
 report `Min Quality -1` with tiny negative volumes — the march recovers within

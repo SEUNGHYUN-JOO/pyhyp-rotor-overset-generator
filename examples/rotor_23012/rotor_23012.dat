@@ -4,6 +4,7 @@
 # the path is resolved relative to THIS input file).
 # Constant chord, -8 deg linear washout (twist about the local 0.25c).
 # ============================================================================
+nBlades    4
 R          2.0
 
 # ---- surface ----
@@ -22,5 +23,5 @@ marchDist  0.12
 
 SECTIONS
 # r/R    chord[m]   twist[deg]  LE_z[c]  airfoil
-0.22     0.121      8.0         0.0      naca23012.dat
-1.00     0.121      0.0         0.0      naca23012.dat
+0.22     0.121      8.0         0.0      airfoil/naca23012.dat
+1.00     0.121      0.0         0.0      airfoil/naca23012.dat

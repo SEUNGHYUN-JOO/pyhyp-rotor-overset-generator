@@ -4,6 +4,7 @@
 # Frame: x = rotor axis (wake +x, suction side -x), y = span (+tip),
 #        z = chordwise (LE faces -z); twist about 0.25c, nose-up positive.
 # ============================================================================
+nBlades    2
 R          1.143        # tip radius [m]
 
 # ---- surface ----
