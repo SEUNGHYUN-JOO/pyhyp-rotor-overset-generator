@@ -190,6 +190,11 @@ default 0.9), warns when the ratio exceeds ~1.3, and `--check` measures the
 actual outer i-spacing of a generated volume (validated: prediction within
 ~2% of the marched result). `make_rotor.sh` prints the advisory automatically.
 
+To make this fully automatic, set **`autoMatch 1`** in the rotor `.dat`:
+`march.py` then FORCES the matched `nLayers` (any `nLayers` in the file is
+overridden), logging e.g.
+`autoMatch: nLayers 76 -> 64 (ratio 1.1559, outer 0.0256 m = 0.90 x h_bg)`.
+
 Mind the cell count for small tip chords: at `bgSpacing 0.15` a c_tip = 0.07 m
 blade on R = 1 m gives ~15M background cells; the small-chord examples ship
 with `bgSpacing 0.4` for compactness.

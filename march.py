@@ -90,6 +90,20 @@ def main():
     outvol = sys.argv[3] if len(sys.argv) > 3 else "bladeVol.xyz"
     m = cfg.get("march", {})
 
+    # autoMatch 1: FORCE nLayers to the value that matches the outermost
+    # wall-normal spacing to the background refine spacing (see
+    # match_spacing.py); any nLayers in the input is overridden.
+    if int(m.get("autoMatch", 0)):
+        from match_spacing import design
+        base = os.path.dirname(os.path.abspath(sys.argv[1]))
+        d = design(cfg, base)
+        old = m.get("nLayers", "unset")
+        m["nLayers"] = d["nLayers"]
+        sys.stderr.write("[march] autoMatch: nLayers %s -> %d (ratio %.4f, "
+                         "outer %.4g m = %.2f x h_bg)\n"
+                         % (old, d["nLayers"], d["ratio"], d["h_outer"],
+                            d["h_outer"]/d["h_bg"]))
+
     from pyhyp import pyHyp
     nblocks = int(open(surf).readline())
     bc = ({} if nblocks > 1 else

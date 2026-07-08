@@ -124,8 +124,12 @@ def main():
     cfg = read_input(inp)
     base = os.path.dirname(os.path.abspath(inp))
     d = design(cfg, base)
-    cur = cfg.get("march", {}).get("nLayers")
+    mm = cfg.get("march", {})
+    cur = mm.get("nLayers")
     report(d, current_N=int(cur) if cur else None)
+    if int(mm.get("autoMatch", 0)):
+        print("autoMatch 1: march.py will FORCE nLayers %d automatically"
+              % d["nLayers"])
 
     if "--check" in sys.argv:
         vol = sys.argv[sys.argv.index("--check") + 1]
