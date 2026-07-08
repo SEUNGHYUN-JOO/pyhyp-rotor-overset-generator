@@ -21,12 +21,12 @@
 #      nChord     200            # chordwise points per side
 #      ...
 #      SECTIONS
-#      # r/R   chord[m]  twist[deg]  LE_z[c]  airfoil
+#      # r/R   chord[m]  twist[deg]  LE_z[m]  airfoil
 #      0.19    0.1905    8.0         0.0      naca0012
 #      1.00    0.1905    8.0         0.0      naca0012
 #
 #  Per-section planform: chord, twist and the fore/aft LE position LE_z
-#  (in local chords, along +z) vary linearly between stations; airfoil
+#  (in METRES, along +z) vary linearly between stations; airfoil
 #  ordinates ("nacaXXXX" or a Selig .dat path, relative to the input file)
 #  are blended linearly.
 #
@@ -251,7 +251,7 @@ class Planform:
              if self.rR[i+1] > self.rR[i] else 0.0)
         chord = (1-w)*self.chord[i] + w*self.chord[i+1]
         twist = (1-w)*self.twist[i] + w*self.twist[i+1]
-        lez = ((1-w)*self.lez[i] + w*self.lez[i+1])*chord
+        lez = (1-w)*self.lez[i] + w*self.lez[i+1]   # [m]
         yu0, yl0 = airfoil_ul(self.airfoils[i], xc, self.base, self.smooth)
         if self.airfoils[i+1] == self.airfoils[i] or w == 0.0:
             yu, yl = yu0, yl0

@@ -47,8 +47,8 @@ automates.
 
 * **twist** is applied about the local **quarter chord (0.25 c)**;
   positive twist = nose-up (LE rotates toward −x)
-* **LE_z** moves the leading edge fore/aft along +z (sweep), in units of the
-  **local chord**, *before* the twist rotation
+* **LE_z** moves the leading edge fore/aft along +z (sweep), in **metres**,
+  *before* the twist rotation
 * volume output index order: **i = wall-normal** (i=1 on the wall),
   j = airfoil perimeter (TE_lower → LE → TE_upper → blunt-TE seal),
   k = span (root → tip, +y)
@@ -87,7 +87,7 @@ nLayers    76
 marchDist  0.19         # total march distance [m]
 
 SECTIONS
-# r/R    chord[m]   twist[deg]  LE_z[c]  airfoil
+# r/R    chord[m]   twist[deg]  LE_z[m]  airfoil
 0.19     0.1905     8.0         0.0      naca0012
 1.00     0.1905     8.0         0.0      naca0012
 ```
@@ -97,7 +97,7 @@ SECTIONS
 | `r/R` | span station y/R |
 | `chord` | local chord [m] |
 | `twist` | nose-up twist about the local 0.25c [deg] |
-| `LE_z` | fore/aft LE position along +z, in local chords (sweep) |
+| `LE_z` | fore/aft LE position along +z, in METRES (sweep) |
 | `airfoil` | `nacaXXXX` (4-digit) or path to a Selig-format `.dat` file |
 
 Airfoil files: both **Selig** (one TE→LE→TE loop) and **Lednicer** (point
@@ -177,8 +177,16 @@ aggressive tests (few layers over a large `marchDist`) collapse instead.
 
 ## Requirements
 
-* python3 + numpy (surface generation)
+* python3 + numpy (surface generation, VTK export — any OS incl. Windows)
 * [pyHyp](https://github.com/mdolab/pyhyp) (volume march only)
+
+### Windows
+
+`blade_surface.py` and `to_vtk.py` are pure python3+numpy and run natively on
+Windows. pyHyp itself is Linux/macOS software, so run the march step under
+**WSL2** (or a Docker image that ships pyHyp, e.g. the DAFoam/MDO-lab images);
+`make_rotor.sh` is a bash script and runs as-is inside WSL. The generated
+PLOT3D/VTK files are plain text and portable across OSes.
 
 ## License
 

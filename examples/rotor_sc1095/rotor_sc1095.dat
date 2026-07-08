@@ -23,6 +23,6 @@ nLayers    72
 marchDist  0.11
 
 SECTIONS
-# r/R    chord[m]   twist[deg]  LE_z[c]  airfoil
+# r/R    chord[m]   twist[deg]  LE_z[m]  airfoil
 0.20     0.110      10.0        0.0      airfoil/sc1095.dat
 1.00     0.110      -2.0        0.0      airfoil/sc1095.dat
