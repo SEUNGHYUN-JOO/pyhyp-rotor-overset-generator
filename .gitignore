@@ -1,0 +1,6 @@
+*.fmt
+*.xyz
+*.raw
+*.cgns
+*.log
+__pycache__/

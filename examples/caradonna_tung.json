@@ -1,0 +1,22 @@
+{
+  "_ref": "Caradonna & Tung (1981) hover rotor blade: NACA0012, AR=6, untwisted, rectangular. Blade frame: x=chord(LE->TE), y=span(tip +y), z=thickness(up).",
+  "planform": {
+    "R": 1.143,
+    "sections": [
+      { "rR": 0.19, "chord": 0.1905, "twistDeg": 8.0, "xLE_c": 0.0, "zLE_c": 0.0, "airfoil": "naca0012" },
+      { "rR": 1.00, "chord": 0.1905, "twistDeg": 8.0, "xLE_c": 0.0, "zLE_c": 0.0, "airfoil": "naca0012" }
+    ]
+  },
+  "surface": {
+    "nChord": 200, "nTE": 7, "teCut": 0.96,
+    "dTE_c": 0.003,
+    "nSpan": 70, "dTipFrac": null, "dRootFrac": null,
+    "closedSock": true
+  },
+  "march": {
+    "firstLayer": 2.78e-6,
+    "nLayers": 76,
+    "marchDist": 0.19,
+    "volSmoothIter": 100
+  }
+}
