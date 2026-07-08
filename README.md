@@ -19,6 +19,14 @@ rotor.dat ──▶ blade_surface.py ──▶ skin.fmt ──▶ march.py (pyHy
                                                                    rotorVol.xyz
 ```
 
+Caradonna-Tung example (ParaView):
+
+| blade skin (single blade) | BL volume — closed sock |
+|---|---|
+| ![blade surface](examples/caradonna_tung/image/surface.png) | ![BL volume](examples/caradonna_tung/image/rotor_volume.png) |
+| **section slice — O-grid, y+≈1 layers** | **Cartesian background — refinement box** |
+| ![section slice](examples/caradonna_tung/image/rotor_volume_slice.png) | ![background](examples/caradonna_tung/image/background_volume.png) |
+
 One-shot (outputs land next to the input file):
 
 ```bash
