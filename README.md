@@ -170,6 +170,26 @@ refYmin -1.2  refYmax 1.2     #  wake downstream, radius 1.2R
 refZmin -1.2  refZmax 1.2
 ```
 
+### Matching the blade outer spacing to the background
+
+For overset interpolation quality the OUTERMOST wall-normal cell of the blade
+mesh should be equal to or slightly smaller than the background refine
+spacing. pyHyp has no such option — the outer spacing is an implicit result
+of `(firstLayer, nLayers, marchDist)` — so `match_spacing.py` solves the
+geometric-series design problem for you:
+
+```bash
+python3 match_spacing.py examples/caradonna_tung/caradonna_tung.dat            # report
+python3 match_spacing.py examples/caradonna_tung/caradonna_tung.dat --apply    # write nLayers
+python3 match_spacing.py rotor.dat --check bladeVol.xyz   # measure a marched volume
+```
+
+It recommends `nLayers` (and reports the implied growth ratio) so the outer
+spacing lands at `matchFactor` x `bgSpacing` x c_tip (`matchFactor` keyword,
+default 0.9), warns when the ratio exceeds ~1.3, and `--check` measures the
+actual outer i-spacing of a generated volume (validated: prediction within
+~2% of the marched result). `make_rotor.sh` prints the advisory automatically.
+
 Mind the cell count for small tip chords: at `bgSpacing 0.15` a c_tip = 0.07 m
 blade on R = 1 m gives ~15M background cells; the small-chord examples ship
 with `bgSpacing 0.4` for compactness.

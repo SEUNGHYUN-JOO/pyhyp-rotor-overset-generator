@@ -17,6 +17,7 @@ DIR="$(dirname "$IN")"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PY="${2:-${PYHYP_PYTHON:-python3}}"
 
+python3 "$HERE/match_spacing.py" "$IN" || true    # overset spacing advisory
 python3 "$HERE/blade_surface.py" "$IN" "$DIR/bladeSurf.fmt"
 "$PY" "$HERE/march.py" "$IN" "$DIR/bladeSurf.fmt" "$DIR/bladeVol.xyz"
 python3 "$HERE/to_vtk.py" "$DIR/bladeSurf.fmt" "$DIR/bladeSurf_vtk"
