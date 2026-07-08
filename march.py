@@ -9,17 +9,20 @@
 #      k = spanwise (root -> tip, +y)
 #
 #  Run under a python that has pyhyp (e.g. an MDO-framework conda env):
-#      python march.py <config.json> <surf.fmt> <outVol.xyz>
+#      python march.py <input.dat> <surf.fmt> <outVol.xyz>
 #
-#  config "march" block (all lengths in METRES):
+#  march keywords in the .dat input (all lengths in METRES):
 #      firstLayer : first cell wall spacing (y+ target)
 #      nLayers    : number of marching layers
 #      marchDist  : total marching distance
 #      splay      : splay factor for open-sock free edges (single block only)
-#      + any advanced pyHyp knob via "pyhyp": { ... } passthrough
+#      volSmoothIter, volBlend, cMax, epsE, epsI, theta, nConstantStart
 # -----------------------------------------------------------------------------
-import sys, json
+import sys, os
 import numpy as np
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from blade_surface import read_input
 
 
 def reorder_to_i_normal(vol_in, vol_out):
@@ -51,7 +54,7 @@ def reorder_to_i_normal(vol_in, vol_out):
 
 
 def main():
-    cfg = json.load(open(sys.argv[1]))
+    cfg = read_input(sys.argv[1])
     surf = sys.argv[2]
     outvol = sys.argv[3] if len(sys.argv) > 3 else "bladeVol.xyz"
     m = cfg.get("march", {})
@@ -84,7 +87,6 @@ def main():
         "splay": float(m.get("splay", 0.25)),
         "kspreltol": 1e-4,
     }
-    options.update(m.get("pyhyp", {}))
     hyp = pyHyp(options=options)
     hyp.run()
     raw = outvol + ".raw"

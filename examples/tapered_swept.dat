@@ -1,0 +1,28 @@
+# ============================================================================
+# Generic tapered, swept, twisted blade with an airfoil transition —
+# demonstrates the per-section planform table.
+# LE_z moves the leading edge fore/aft (+z = toward the TE side) in units of
+# the LOCAL chord; twist is applied afterwards about the local 0.25c.
+# ============================================================================
+R          1.0
+
+# ---- surface ----
+nChord     160
+nTE        7
+teCut      0.97
+dTE_c      0.003
+nSpan      60
+dTipFrac   0.005        # spanwise clustering at the tip
+closedSock 1
+
+# ---- march (pyHyp) ----
+firstLayer 3.0e-6
+nLayers    64
+marchDist  0.06
+
+SECTIONS
+# r/R    chord[m]   twist[deg]  LE_z[c]  airfoil
+0.20     0.140      14.0        0.00     naca2412
+0.70     0.120       6.0        0.05     naca2412
+0.90     0.100       2.5        0.15     naca0012
+1.00     0.070       0.5        0.35     naca0012

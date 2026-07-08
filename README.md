@@ -2,16 +2,17 @@
 
 Structured, wall-resolved (y+ ≈ 1) boundary-layer meshing of rotor/wing
 blades with [pyHyp](https://github.com/mdolab/pyhyp) hyperbolic extrusion —
-from a **per-section planform definition** to a watertight multiblock volume.
+from a **plain-text per-section planform table** to a watertight multiblock
+volume.
 
 The output is plain formatted **PLOT3D**, so the mesh is solver-agnostic:
 convert/import it into OpenFOAM, SU2, CGNS-based codes, or use it as the
 near-body component of an overset (chimera) setup.
 
 ```
-config.json ──▶ blade_surface.py ──▶ skin.fmt ──▶ march.py (pyHyp) ──▶ vol.xyz
-                 (closed sock,                     (hyperbolic BL,
-                  multiblock surface)               i = wall-normal)
+blade.dat ──▶ blade_surface.py ──▶ skin.fmt ──▶ march.py (pyHyp) ──▶ vol.xyz
+               (closed sock,                     (hyperbolic BL,
+                multiblock surface)               i = wall-normal)
 ```
 
 ## Why
@@ -24,65 +25,82 @@ first-cell spacing you set directly in metres. The hard part — a watertight
 ("closed sock") surface topology that pyHyp accepts — is what this package
 automates.
 
-## Axis convention (blade frame)
+## Axis convention (rotor frame)
 
 ```
-        z  (thickness, suction side up)
+      -x  (suction side / thrust side)
         │
-        │     y  (span, tip)
+        │      y  (span, tip)
         │    ╱
         │   ╱
-        └──╱────────── x  (chord, LE → TE = section wake direction)
+        └──╱─────────▶  z   (chordwise: the LE FACES -z, TE toward +z)
+
+  x : rotor axis — rotor wake direction is +x
 ```
 
-* positive twist = **leading edge up** (+z), applied **about the LE**
+* **twist** is applied about the local **quarter chord (0.25 c)**;
+  positive twist = nose-up (LE rotates toward −x)
+* **LE_z** moves the leading edge fore/aft along +z (sweep), in units of the
+  **local chord**, *before* the twist rotation
 * volume output index order: **i = wall-normal** (i=1 on the wall),
   j = airfoil perimeter (TE_lower → LE → TE_upper → blunt-TE seal),
-  k = span (root → tip)
+  k = span (root → tip, +y)
 
-## Planform definition
+## Input file
 
-Arbitrary planforms are built from spanwise sections; properties vary
-linearly between stations and airfoil ordinates are blended:
+One plain-text `.dat` file: keyword lines followed by a `SECTIONS` table
+(`#` starts a comment — see `examples/`):
 
-```json
-"planform": {
-  "R": 1.143,
-  "sections": [
-    { "rR": 0.19, "chord": 0.1905, "twistDeg": 8.0,
-      "xLE_c": 0.0, "zLE_c": 0.0, "airfoil": "naca0012" },
-    { "rR": 1.00, "chord": 0.0700, "twistDeg": 0.5,
-      "xLE_c": 0.35, "zLE_c": 0.02, "airfoil": "naca0012" }
-  ]
-}
+```
+R          1.143        # tip radius [m]
+
+nChord     200          # chordwise points per side
+nTE        7            # blunt-TE seal interior points (must be ODD)
+teCut      0.96         # TE truncation (x/c)
+dTE_c      0.003        # chordwise spacing at the TE (x/c)
+nSpan      70           # spanwise stations
+closedSock 1
+
+firstLayer 2.78e-6      # first wall spacing [m]  (y+ target)
+nLayers    76
+marchDist  0.19         # total march distance [m]
+
+SECTIONS
+# r/R    chord[m]   twist[deg]  LE_z[c]  airfoil
+0.19     0.1905     8.0         0.0      naca0012
+1.00     0.1905     8.0         0.0      naca0012
 ```
 
-| key | meaning |
+| column | meaning |
 |---|---|
-| `rR` | span station y/R |
+| `r/R` | span station y/R |
 | `chord` | local chord [m] |
-| `twistDeg` | nose-up twist about the LE [deg] |
-| `xLE_c`, `zLE_c` | LE position in the section plane, in local chords (sweep / dihedral-flap) |
+| `twist` | nose-up twist about the local 0.25c [deg] |
+| `LE_z` | fore/aft LE position along +z, in local chords (sweep) |
 | `airfoil` | `nacaXXXX` (4-digit) or path to a Selig-format `.dat` file |
+
+Between stations chord/twist/LE_z vary linearly and airfoil ordinates are
+blended linearly. Optional keywords: `dLE_c` (LE chordwise spacing),
+`dRootFrac`/`dTipFrac` (spanwise tanh clustering), `rootCut`,
+`splay`, `volSmoothIter`, `volBlend`, `cMax`, `epsE`, `epsI`, `theta`,
+`nConstantStart`.
 
 ## Usage
 
 ```bash
 # 1. surface (any python3 + numpy)
-python3 blade_surface.py examples/caradonna_tung.json skin.fmt
+python3 blade_surface.py examples/caradonna_tung.dat skin.fmt
 
 # 2. march (a python with pyHyp installed, e.g. the MDO-lab / DAFoam conda env)
-<pyhyp-python> march.py examples/caradonna_tung.json skin.fmt bladeVol.xyz
-```
+<pyhyp-python> march.py examples/caradonna_tung.dat skin.fmt bladeVol.xyz
 
-`march.py` prints pyHyp's quality table; look for `Normals are consistent!`
-and a positive `Min Quality`. The result `bladeVol.xyz` is a 3-block PLOT3D
-volume (main O-grid + tip cap + root cap) in the i=wall-normal ordering.
-
-```bash
 # 3. optional: ParaView-ready VTK (no VTK library required)
 python3 to_vtk.py bladeVol.xyz          # -> bladeVol.vtm + bladeVol/block*.vts
 ```
+
+`march.py` prints pyHyp's quality table; look for `Normals are consistent!`
+and a positive `Min Quality`. The result is a 3-block PLOT3D volume (main
+O-grid + tip cap + root cap) in the i=wall-normal ordering.
 
 Note on the march log: the first few levels near the blunt-TE cap corners can
 report `Min Quality -1` with tiny negative volumes — the march recovers within
@@ -108,9 +126,11 @@ aggressive tests (few layers over a large `marchDist`) collapse instead.
   stays at nose-radius scale.
 * **Blunt TE**: the TE is truncated at `teCut` and sealed with `nTE` points —
   a sharp TE folds the hyperbolic march.
-* Set `closedSock: false` to fall back to a single open-ended block whose
-  free span edges pyHyp splays (useful for quick tests; the span ends are
-  then not meshed).
+* The outward orientation of the quilt is verified numerically at write time
+  and all blocks are flipped together if needed, so the march direction is
+  always out of the body.
+* Set `closedSock 0` to fall back to a single open-ended block whose free
+  span edges pyHyp splays (quick tests; span ends are then not meshed).
 
 ## Requirements
 
