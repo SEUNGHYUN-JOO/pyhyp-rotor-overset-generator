@@ -50,7 +50,8 @@ import numpy as np
 # input file
 # ---------------------------------------------------------------------------
 SURF_KEYS = {"nChord", "nTE", "teCut", "dLE_c", "dTE_c",
-             "nSpan", "dRootFrac", "dTipFrac", "closedSock", "rootCut",
+             "nSpan", "dRootFrac", "dTipFrac", "closedTips", "closedSock",
+             "rootCut",
              "datSmooth", "capDome"}
 MARCH_KEYS = {"firstLayer", "nLayers", "marchDist", "splay", "volSmoothIter",
               "volBlend", "volCoef", "cMax", "epsE", "epsI", "theta",
@@ -354,7 +355,7 @@ def build(cfg, out, base="."):
         sec2d.append((C.copy(), T.copy(), chord, twist, zle))
 
     blocks = [(Xg, Yg, Zg)]
-    if int(s.get("closedSock", 1)):
+    if int(s.get("closedTips", s.get("closedSock", 1))):
         dome = float(s.get("capDome", 0.0))
         blocks.append(cap_tfi(sec2d[-1], nchord, nte, stations[-1], True, dome))
         blocks.append(cap_tfi(sec2d[0], nchord, nte, stations[0], False, dome))

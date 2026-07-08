@@ -1,8 +1,8 @@
 #!/bin/bash
 # -----------------------------------------------------------------------------
 #  Author: JOO Seunghyun <chlrh45351@gmail.com>  (2026-07)
-#  make_rotor.sh — one-shot rotor mesh generation.  Outputs are written NEXT TO
-#  the input file (the per-rotor example folder):
+#  make_rotor.sh — one-shot rotor mesh generation.  Outputs are written to an
+#  output/ folder next to the input file:
 #      bladeSurf.fmt      single-blade skin (PLOT3D surface)
 #      bladeVol.xyz       single-blade BL volume (i = wall-normal)
 #      rotorVol.xyz       full rotor (nBlades copies rotated about +x)
@@ -14,7 +14,8 @@
 # -----------------------------------------------------------------------------
 set -e
 IN="$(readlink -f "$1")"
-DIR="$(dirname "$IN")"
+DIR="$(dirname "$IN")/output"
+mkdir -p "$DIR"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PY="${2:-${PYHYP_PYTHON:-python3}}"
 

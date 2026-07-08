@@ -27,7 +27,7 @@ Caradonna-Tung example (ParaView):
 | **section slice — O-grid, y+≈1 layers** | **Cartesian background — refinement box** |
 | ![section slice](examples/caradonna_tung/image/rotor_volume_slice.png) | ![background](examples/caradonna_tung/image/background_volume.png) |
 
-One-shot (outputs land next to the input file):
+One-shot (outputs are written to an `output/` folder next to the input file):
 
 ```bash
 PYHYP_PYTHON=<python-with-pyhyp> ./make_rotor.sh examples/rotor_sc1095/rotor_sc1095.dat
@@ -76,11 +76,12 @@ examples/
   rotor_sc1095/
     rotor_sc1095.dat        # this input file
     airfoil/sc1095.dat      # airfoil coordinates (paths relative to input)
-    bladeSurf.fmt           # generated: single-blade skin
-    bladeVol.xyz            # generated: single-blade volume
-    rotorVol.xyz            # generated: full rotor (nBlades copies about +x)
-    backgroundVol.xyz       # generated: structured overset background
-    *_vtk.vtm               # generated: ParaView
+    output/                 # generated meshes (git-ignored)
+      bladeSurf.fmt         #   single-blade skin
+      bladeVol.xyz          #   single-blade volume
+      rotorVol.xyz          #   full rotor (nBlades copies about +x)
+      backgroundVol.xyz     #   structured overset background
+      *_vtk.vtm             #   ParaView
 ```
 
 ```
@@ -97,7 +98,7 @@ nSpan      70           # spanwise stations                        (default 60)
 #dRootFrac auto         # spanwise tanh clustering at the root; default uniform
 #dTipFrac  auto         # spanwise tanh clustering at the tip;  default uniform
 #rootCut   auto         # span start y/R; default = first SECTIONS r/R
-closedSock 1            # 1: watertight tips (TFI caps) / 0: open + splay (default 1)
+closedTips 1            # 1: watertight tips (TFI caps) / 0: open + splay (default 1)
 capDome    0.25         # rounded tip cap, 0 flat .. ~1 half-thickness dome
                         #   (default 0; 0.2-0.4 recommended)
 #datSmooth 5            # smoothing passes for tabulated airfoils  (default 5)
@@ -169,7 +170,7 @@ default; the same fully annotated block ships in every `examples/*/*.dat`.
 ## Usage
 
 One-shot (surface -> match advisory -> march -> full rotor -> background -> VTK,
-outputs written next to the input file):
+outputs written to an `output/` folder next to the input file):
 
 ```bash
 PYHYP_PYTHON=<python-with-pyhyp> ./make_rotor.sh examples/caradonna_tung/caradonna_tung.dat
@@ -185,7 +186,7 @@ python3 blade_surface.py examples/caradonna_tung/caradonna_tung.dat skin.fmt
 <pyhyp-python> march.py examples/caradonna_tung/caradonna_tung.dat skin.fmt bladeVol.xyz
 
 # 3. optional: ParaView-ready VTK (no VTK library required)
-python3 to_vtk.py bladeVol.xyz          # -> bladeVol.vtm + bladeVol/block*.vts
+python3 to_vtk.py output/bladeVol.xyz   # -> bladeVol.vtm + block*.vts
 ```
 
 `march.py` prints pyHyp's quality table; look for `Normals are consistent!`
@@ -225,7 +226,7 @@ geometric-series design problem for you:
 ```bash
 python3 match_spacing.py examples/caradonna_tung/caradonna_tung.dat            # report
 python3 match_spacing.py examples/caradonna_tung/caradonna_tung.dat --apply    # write nLayers
-python3 match_spacing.py rotor.dat --check bladeVol.xyz   # measure a marched volume
+python3 match_spacing.py rotor.dat --check output/bladeVol.xyz   # measure a marched volume
 ```
 
 It recommends `nLayers` (and reports the implied growth ratio) so the outer
@@ -270,7 +271,7 @@ aggressive tests (few layers over a large `marchDist`) collapse instead.
 * The outward orientation of the quilt is verified numerically at write time
   and all blocks are flipped together if needed, so the march direction is
   always out of the body.
-* Set `closedSock 0` to fall back to a single open-ended block whose free
+* Set `closedTips 0` (formerly `closedSock`, still accepted) to fall back to a single open-ended block whose free
   span edges pyHyp splays (quick tests; span ends are then not meshed).
 * **Rounded tip cap**: the caps are flat by default; `capDome` (0..~1) bulges
   the cap INTERIOR outboard into a slightly rounded tip (a local

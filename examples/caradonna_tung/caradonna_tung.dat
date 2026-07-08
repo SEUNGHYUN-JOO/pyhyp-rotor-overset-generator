@@ -18,7 +18,7 @@ nSpan      70          # spanwise stations
 #dRootFrac  auto        # spanwise tanh clustering at the root (fraction); default uniform (default)
 #dTipFrac   auto        # spanwise tanh clustering at the tip (fraction); default uniform (default)
 #rootCut    auto        # span start y/R; default = first SECTIONS r/R (default)
-closedSock 1           # 1: watertight sock with TFI caps / 0: open ends + splay
+closedTips 1           # 1: watertight sock with TFI caps / 0: open ends + splay
 capDome    0.25        # rounded tip cap: 0 = flat .. ~1 = half-thickness dome (0.2-0.4 recommended)
 #datSmooth  5           # smoothing passes for tabulated airfoil files (default)
 
