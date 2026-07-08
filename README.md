@@ -241,7 +241,8 @@ aggressive tests (few layers over a large `marchDist`) collapse instead.
   span edges pyHyp splays (quick tests; span ends are then not meshed).
 * **Rounded tip cap**: the caps are flat by default; `capDome` (0..~1) bulges
   the cap INTERIOR outboard into a slightly rounded tip (a local
-  half-thickness dome, `capDome 1` ~ semicircular cross-section). Cap
+  half-thickness dome, `capDome 1` ~ semicircular cross-section; 0.2-0.4
+gives a subtle edge rounding and is the recommended range). Cap
   boundary points are untouched, so the sock stitching and pyHyp's normal
   check are unaffected (validated: Caradonna-Tung with `capDome 0.6`, final
   Min Quality 0.41). For a true CAD-defined rounded cap you can also build
