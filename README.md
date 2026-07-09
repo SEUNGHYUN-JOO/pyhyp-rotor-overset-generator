@@ -360,6 +360,16 @@ snapshot of each release is available via Zenodo:
 }
 ```
 
+## Contact
+
+**Seunghyun Joo**
+M.S. student, Aerospace Vehicle Design Laboratory
+Department of Aerospace Engineering, Seoul National University
+<chlrh45351@gmail.com>
+
+Questions, bug reports and collaboration proposals are welcome — please use
+the GitHub issue tracker for anything reproducible, or e-mail for the rest.
+
 ## License
 
 MIT (this package). pyHyp is a separate project by the MDO Lab, licensed under the Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0); it is not bundled here — install it independently and comply with its license.

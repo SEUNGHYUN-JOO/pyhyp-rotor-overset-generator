@@ -5,6 +5,8 @@ type: software
 authors:
   - family-names: "Joo"
     given-names: "Seunghyun"
+    email: chlrh45351@gmail.com
+    affiliation: "Aerospace Vehicle Design Laboratory, Department of Aerospace Engineering, Seoul National University"
 repository-code: "https://github.com/SEUNGHYUN-JOO/pyhyp-rotor-overset-generator"
 license: MIT
 keywords:
