@@ -14,6 +14,9 @@
 #  Keywords (all optional; box extents in units of R):
 #      bgSpacing   0.15        # refine-box spacing, multiples of the tip chord
 #      bgGrowth    1.12        # geometric growth ratio outside the box
+#      bgQuarter   0           # 1 = quarter (90 deg sector) background whose
+#                              #     DIAGONAL bisector is +y (the blade1 span);
+#                              #     bgYmin/bgZmin/refYmin/refZmin are ignored
 #      bgXmin -4   bgXmax 8    # domain (R units; +x = downstream/wake)
 #      bgYmin -4   bgYmax 4
 #      bgZmin -4   bgZmax 4
@@ -21,7 +24,7 @@
 #      refYmin -1.2  refYmax 1.2
 #      refZmin -1.2  refZmax 1.2
 #
-#  Usage:  background_mesh.py <rotor.dat> <out.xyz>
+#  Usage:  background_mesh.py <rotor.dat> <out.x>
 # -----------------------------------------------------------------------------
 import sys, os
 import numpy as np
@@ -75,22 +78,37 @@ def build(cfg, out, base="."):
            (("refXmin", -0.5), ("refXmax", 2.0), ("refYmin", -1.2),
             ("refYmax", 1.2), ("refZmin", -1.2), ("refZmax", 1.2))]
 
+    quarter = int(bg.get("bgQuarter", 0))
     xs = stretch_axis(dom[0], dom[1], ref[0], ref[1], h0, ratio)
-    ys = stretch_axis(dom[2], dom[3], ref[2], ref[3], h0, ratio)
-    zs = stretch_axis(dom[4], dom[5], ref[4], ref[5], h0, ratio)
+    if quarter:
+        # 90-degree sector: build a Cartesian quarter box in a primed frame
+        # (y', z' >= 0, edges at the periodic faces), then rotate -45 deg
+        # about +x so the y'=z' DIAGONAL lands on +y (the blade1 span).
+        ys = stretch_axis(0.0, dom[3], 0.0, ref[3], h0, ratio)
+        zs = stretch_axis(0.0, dom[5], 0.0, ref[5], h0, ratio)
+    else:
+        ys = stretch_axis(dom[2], dom[3], ref[2], ref[3], h0, ratio)
+        zs = stretch_axis(dom[4], dom[5], ref[4], ref[5], h0, ratio)
     ni, nj, nk = len(xs), len(ys), len(zs)
     sys.stderr.write("[background] tip chord %.4g m -> refine spacing %.4g m "
-                     "(%.2f c_tip), growth %.3g\n"
-                     % (ctip, h0, h0/ctip, ratio))
+                     "(%.2f c_tip), growth %.3g%s\n"
+                     % (ctip, h0, h0/ctip, ratio,
+                        ", QUARTER (diagonal = +y)" if quarter else ""))
     sys.stderr.write("[background] dims %d x %d x %d = %.2fM cells\n"
                      % (ni, nj, nk, (ni-1)*(nj-1)*(nk-1)/1e6))
 
     X, Y, Z = np.meshgrid(xs, ys, zs, indexing="ij")   # [i,j,k]
+    if quarter:
+        c = np.sqrt(0.5)
+        Y, Z = c*(Y + Z), c*(Z - Y)                    # -45 deg about +x
     with open(out, "w") as f:
         f.write("1\n%d %d %d\n" % (ni, nj, nk))
         for A in (X, Y, Z):
             B = np.transpose(A, (2, 1, 0))             # k slowest -> i fastest
-            f.write("\n".join("%.10g" % v for v in B.ravel()))
+            # exponent format on purpose: a Cartesian grid emits thousands of
+            # integer-valued coordinates, and bare-integer tokens make some
+            # PLOT3D importers (e.g. Pointwise) misdetect IBLANK data
+            f.write("\n".join("%.10e" % v for v in B.ravel()))
             f.write("\n")
     sys.stderr.write("[background] wrote %s\n" % out)
 
@@ -98,5 +116,5 @@ def build(cfg, out, base="."):
 if __name__ == "__main__":
     inp = sys.argv[1]
     cfg = read_input(inp)
-    out = sys.argv[2] if len(sys.argv) > 2 else "backgroundVol.xyz"
+    out = sys.argv[2] if len(sys.argv) > 2 else "background.x"
     build(cfg, out, base=os.path.dirname(os.path.abspath(inp)))

@@ -10,7 +10,7 @@
 #      k = spanwise (root -> tip, +y)
 #
 #  Run under a python that has pyhyp (e.g. an MDO-framework conda env):
-#      python march.py <input.dat> <surf.fmt> <outVol.xyz>
+#      python march.py <input.dat> <surf.fmt> <outVol.x>
 #
 #  march keywords in the .dat input (all lengths in METERS):
 #      firstLayer : first cell wall spacing (y+ target)
@@ -39,6 +39,11 @@ def reorder_to_i_normal(vol_in, vol_out):
         arr = np.array(v[off:off+3*n], dtype=float); off += 3*n
         # PLOT3D formatted ordering: i fastest, then j, then k
         comp = [arr[c*n:(c+1)*n].reshape((nk, nj, ni)) for c in range(3)]
+        if not all(np.isfinite(c).all() for c in comp):
+            raise SystemExit("[march] FATAL: non-finite (Inf/NaN) coordinates "
+                             "in %s — the hyperbolic march collapsed (see the "
+                             "pyHyp quality table above); increase marchDist "
+                             "/ nLayers or lower maxRatio" % vol_in)
         blocks.append(comp)
     with open(vol_out, "w") as f:
         f.write("%d\n" % nb)
@@ -56,7 +61,10 @@ def reorder_to_i_normal(vol_in, vol_out):
 
 def replicate_rotor(vol_in, vol_out, nblades):
     """Rotate the single-blade volume about the ROTOR AXIS (+x) into a full
-    rotor: nblades copies at 2*pi/nblades increments, one multiblock file."""
+    rotor.  Blade b (1-based) is rotated by -(b-1)*2*pi/nblades, so for a
+    4-blade rotor: blade1 spans +y, blade2 -z, blade3 -y, blade4 +z.
+    Writes the combined multiblock rotor to vol_out AND each blade as its own
+    overset component file blade1.x, blade2.x, ... next to vol_out."""
     import math
     v = open(vol_in).read().split()
     nb = int(v[0])
@@ -67,17 +75,31 @@ def replicate_rotor(vol_in, vol_out, nblades):
         n = ni*nj*nk
         arr = np.array(v[off:off+3*n], dtype=float); off += 3*n
         comps.append([arr[c*n:(c+1)*n] for c in range(3)])
+    outdir = os.path.dirname(os.path.abspath(vol_out))
+    rotated = []
+    for b in range(nblades):
+        a = -2.0*math.pi*b/nblades
+        ca, sa = math.cos(a), math.sin(a)
+        blk = [(X, ca*Y - sa*Z, sa*Y + ca*Z) for (X, Y, Z) in comps]
+        rotated.append(blk)
+        bpath = os.path.join(outdir, "blade%d.x" % (b + 1))
+        with open(bpath, "w") as f:
+            f.write("%d\n" % nb)
+            for (ni, nj, nk) in dims:
+                f.write("%d %d %d\n" % (ni, nj, nk))
+            for (X, Yr, Zr) in blk:
+                for A in (X, Yr, Zr):
+                    f.write("\n".join("%.10g" % x for x in A))
+                    f.write("\n")
+        sys.stderr.write("[march] blade %d/%d (rotated %.1f deg): %s\n"
+                         % (b + 1, nblades, math.degrees(a), bpath))
     with open(vol_out, "w") as f:
         f.write("%d\n" % (nb*nblades))
         for _ in range(nblades):
             for (ni, nj, nk) in dims:
                 f.write("%d %d %d\n" % (ni, nj, nk))
-        for b in range(nblades):
-            a = 2.0*math.pi*b/nblades
-            ca, sa = math.cos(a), math.sin(a)
-            for (X, Y, Z) in comps:
-                Yr = ca*Y - sa*Z
-                Zr = sa*Y + ca*Z
+        for blk in rotated:
+            for (X, Yr, Zr) in blk:
                 for A in (X, Yr, Zr):
                     f.write("\n".join("%.10g" % x for x in A))
                     f.write("\n")
@@ -88,7 +110,7 @@ def replicate_rotor(vol_in, vol_out, nblades):
 def main():
     cfg = read_input(sys.argv[1])
     surf = sys.argv[2]
-    outvol = sys.argv[3] if len(sys.argv) > 3 else "bladeVol.xyz"
+    outvol = sys.argv[3] if len(sys.argv) > 3 else "bladeVol.x"
     m = cfg.get("march", {})
 
     # autoMatch 1: FORCE nLayers to the value that matches the outermost

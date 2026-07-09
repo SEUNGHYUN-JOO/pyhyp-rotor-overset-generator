@@ -13,10 +13,10 @@ convert/import it into OpenFOAM, SU2, CGNS-based codes, or use it as the
 near-body component of an overset (chimera) setup.
 
 ```
-rotor.dat ──▶ blade_surface.py ──▶ skin.fmt ──▶ march.py (pyHyp) ──▶ bladeVol.xyz
+rotor.dat ──▶ blade_surface.py ──▶ skin.fmt ──▶ march.py (pyHyp) ──▶ bladeVol.x
                (watertight skin,                     (hyperbolic BL,        │ nBlades > 1
                 multiblock surface)               i = wall-normal)      ▼
-                                                                   rotorVol.xyz
+                                                          rotorVol.x + blade1.x, blade2.x, ...
 ```
 
 Caradonna-Tung example (ParaView):
@@ -60,6 +60,10 @@ automates.
   positive twist = nose-up (LE rotates toward −x)
 * **LE_z** moves the leading edge fore/aft along +z (sweep), in **meters**,
   *before* the twist rotation
+* **z datum**: the blade is placed so the **ROOT quarter-chord sits at
+  z = 0** (the twist pivot is already at x = 0) — the blade pitch /
+  quarter-chord axis passes through the rotor axis. `LE_z` entries are
+  relative planform shifts on top of this datum.
 * volume output index order: **i = wall-normal** (i=1 on the wall),
   j = airfoil perimeter (TE_lower → LE → TE_upper → blunt-TE seal),
   k = span (root → tip, +y)
@@ -78,9 +82,11 @@ examples/
     airfoil/sc1095.dat      # airfoil coordinates (paths relative to input)
     output/                 # generated meshes (git-ignored)
       bladeSurf.fmt         #   single-blade skin
-      bladeVol.xyz          #   single-blade volume
-      rotorVol.xyz          #   full rotor (nBlades copies about +x)
-      backgroundVol.xyz     #   structured overset background
+      bladeVol.x            #   single-blade volume
+      rotorVol.x            #   full rotor (nBlades copies about +x)
+      blade1.x, blade2.x .. #   per-blade overset components (blade1 = +y span,
+                            #     then +y -> -z -> -y -> +z rotation order)
+      background.x          #   structured overset background
       *_vtk.vtm             #   ParaView
 ```
 
@@ -110,6 +116,8 @@ marchDist  0.19         # total march distance [m]
 autoMatch  1            # 1: force nLayers so the outer wall-normal cell
                         #    matches the background refine spacing / 0: off
 #matchFactor 0.9        # target outer cell = matchFactor * h_bg   (default 0.9)
+#maxRatio  1.3          # autoMatch growth-ratio safety cap; above it nLayers
+                        #   is increased (outer cell undershoots)  (default 1.3)
 #splay     0.25         # open-end free-edge splay                 (default 0.25)
 #volSmoothIter 100      # pyHyp volume smoothing iterations        (default 100)
 #volBlend  0.0005       # pyHyp volume blending                    (default 0.0005)
@@ -123,6 +131,9 @@ autoMatch  1            # 1: force nLayers so the outer wall-normal cell
 # ---- overset background (background_mesh.py) ----
 #bgSpacing 0.15         # refine-box spacing [tip chords]          (default 0.15)
 #bgGrowth  1.12         # spacing growth ratio outside the box     (default 1.12)
+#bgQuarter 0            # 1: quarter (90 deg sector) background whose diagonal
+                        #    bisector is +y (the blade1 span); the y/z min
+                        #    keywords are ignored                  (default 0)
 #bgXmin    -4           # domain extents [R]; +x = wake/downstream (defaults:
 #bgXmax    8            #   x in [-4, 8], y and z in [-4, 4])
 #bgYmin    -4
@@ -183,30 +194,35 @@ Or step by step:
 python3 blade_surface.py examples/caradonna_tung/caradonna_tung.dat skin.fmt
 
 # 2. march (a python with pyHyp installed, e.g. the MDO-lab / DAFoam conda env)
-<pyhyp-python> march.py examples/caradonna_tung/caradonna_tung.dat skin.fmt bladeVol.xyz
+<pyhyp-python> march.py examples/caradonna_tung/caradonna_tung.dat skin.fmt bladeVol.x
 
 # 3. optional: ParaView-ready VTK (no VTK library required)
-python3 to_vtk.py output/bladeVol.xyz   # -> bladeVol.vtm + block*.vts
+python3 to_vtk.py output/bladeVol.x   # -> bladeVol.vtm + block*.vts
 ```
 
 `march.py` prints pyHyp's quality table; look for `Normals are consistent!`
 and a positive `Min Quality`. The single-blade result is a 3-block PLOT3D
 volume (main O-grid + tip cap + root cap) in the i=wall-normal ordering.
 With `nBlades > 1` the single-blade volume is additionally replicated by
-rotation about the rotor axis (+x) into `rotorVol.xyz` (nBlades x 3 blocks);
-the SURFACE stays single-blade — only one blade is ever marched.
+rotation about the rotor axis (+x) into `rotorVol.x` (nBlades x 3 blocks)
+**and per-blade overset component files `blade1.x`, `blade2.x`, ...** —
+blade `b` is rotated by `-(b-1)*360/nBlades` degrees about +x, so for a
+4-blade rotor blade1 spans +y, blade2 -z, blade3 -y, blade4 +z. The SURFACE
+stays single-blade — only one blade is ever marched.
 
 ## Overset background mesh
 
 `background_mesh.py` (also run by `make_rotor.sh`) builds a structured
-single-block Cartesian background for overset assemblies from the same input:
-a **refinement box** around the rotor with uniform spacing given in **tip
-chords** (default `bgSpacing 0.15`), growing geometrically away from the box
-(`bgGrowth`, default 1.12) out to the domain boundary.
+single-block Cartesian background (`background.x`) for overset assemblies
+from the same input: a **refinement box** around the rotor with uniform
+spacing given in **tip chords** (default `bgSpacing 0.15`), growing
+geometrically away from the box (`bgGrowth`, default 1.12) out to the domain
+boundary.
 
 ```
 bgSpacing  0.15         # refine-box spacing [tip chords]
 bgGrowth   1.12         # spacing growth ratio outside the box
+bgQuarter  0            # 1 = quarter (90 deg sector) background, diagonal on +y
 bgXmin -4   bgXmax 8    # domain extents [R]  (+x = wake/downstream)
 bgYmin -4   bgYmax 4
 bgZmin -4   bgZmax 4
@@ -214,6 +230,14 @@ refXmin -0.5  refXmax 2.0     # refinement box [R]: 0.5R upstream, 2R of
 refYmin -1.2  refYmax 1.2     #  wake downstream, radius 1.2R
 refZmin -1.2  refZmax 1.2
 ```
+
+With **`bgQuarter 1`** the background is a 90-degree sector for periodic
+quarter-rotor setups: a Cartesian quarter box built on rotated axes so that
+its **diagonal bisector lies exactly on +y** — i.e. blade1 sits centered in
+the sector and the two straight sector faces (the periodic boundaries) are
+at ±45° from +y. The `bgYmin`/`bgZmin`/`refYmin`/`refZmin` keywords are
+ignored in this mode (the maxima set the sector-face extents); the output is
+still a single structured block named `background.x`.
 
 ### Matching the blade outer spacing to the background
 
@@ -226,7 +250,7 @@ geometric-series design problem for you:
 ```bash
 python3 match_spacing.py examples/caradonna_tung/caradonna_tung.dat            # report
 python3 match_spacing.py examples/caradonna_tung/caradonna_tung.dat --apply    # write nLayers
-python3 match_spacing.py rotor.dat --check output/bladeVol.xyz   # measure a marched volume
+python3 match_spacing.py rotor.dat --check output/bladeVol.x   # measure a marched volume
 ```
 
 It recommends `nLayers` (and reports the implied growth ratio) so the outer
@@ -240,6 +264,13 @@ To make this fully automatic, set **`autoMatch 1`** in the rotor `.dat`:
 overridden), logging e.g.
 `autoMatch: nLayers 76 -> 64 (ratio 1.1559, outer 0.0256 m = 0.90 x h_bg)`.
 
+If the exact match would need a growth ratio above **`maxRatio`** (default
+1.3 — beyond it the hyperbolic march collapses with NaN volumes), autoMatch
+falls back to the smallest `nLayers` with ratio <= `maxRatio`: the outer
+cell then *undershoots* the target, which is the safe side of the overset
+donor rule. Increase `marchDist` (or refine the background) if you need the
+exact match.
+
 Mind the cell count for small tip chords: at `bgSpacing 0.15` a c_tip = 0.07 m
 blade on R = 1 m gives ~15M background cells; the small-chord examples ship
 with `bgSpacing 0.4` for compactness.
@@ -248,6 +279,13 @@ Note on the march log: the first few levels near the blunt-TE cap corners can
 report `Min Quality -1` with tiny negative volumes — the march recovers within
 ~30 levels **provided the growth ratio stays moderate (~1.15)**. Very
 aggressive tests (few layers over a large `marchDist`) collapse instead.
+
+Real-data high-camber sections (e.g. the SC1095 example) are the most
+sensitive case: use **flat caps** (`capDome 0` — the dome folds on strong
+camber), a **moderate `marchDist`** (~1 chord; larger distances destabilize
+the cap transients even at gentle ratios), and a **tight `maxRatio`**
+(~1.12). A collapsed march is now caught by `march.py` (non-finite
+coordinates -> hard error) instead of silently writing a broken volume.
 
 ## Topology notes (the parts that are easy to get wrong)
 

@@ -24,7 +24,7 @@
 #  Usage:
 #      match_spacing.py <rotor.dat>                 # report recommendation
 #      match_spacing.py <rotor.dat> --apply         # also patch nLayers in file
-#      match_spacing.py <rotor.dat> --check <bladeVol.xyz>
+#      match_spacing.py <rotor.dat> --check <bladeVol.x>
 #                                                   # measure the ACTUAL outer
 #                                                   # spacing of a marched
 #                                                   # volume vs h_bg
@@ -76,9 +76,24 @@ def design(cfg, base):
         if best is None or cand < best:
             best = cand
     _, _, N, r, h_last, ok = best
+
+    # Robustness cap: a matched design whose growth ratio exceeds maxRatio
+    # (default 1.3) collapses the hyperbolic march (NaN volumes).  Fall back
+    # to the SMALLEST nLayers with ratio <= maxRatio: the outer cell then
+    # UNDERSHOOTS the target — the safe side of the overset donor rule
+    # (blade cell equal to or smaller than the background cell).
+    rmax = float(m.get("maxRatio", 1.3))
+    capped = False
+    if r > rmax:
+        capped = True
+        while r > rmax:
+            N += 1
+            r = solve_ratio(s0, D, N)
+        h_last = s0*r**(N - 1)
+        ok = h_last <= h_bg
     return {"s0": s0, "marchDist": D, "c_tip": ctip, "h_bg": h_bg,
             "matchFactor": fac, "nLayers": N, "ratio": r, "h_outer": h_last,
-            "ok": ok}
+            "ok": ok, "capped": capped, "maxRatio": rmax}
 
 
 def report(d, current_N=None):
@@ -95,9 +110,11 @@ def report(d, current_N=None):
           "(%.2f x h_bg, target factor %.2f)"
           % (d["nLayers"], d["ratio"], d["h_outer"], d["h_outer"]/d["h_bg"],
              d["matchFactor"]))
-    if d["ratio"] > 1.30:
-        print("WARNING: growth ratio %.3f > 1.3 — increase marchDist or "
-              "nLayers for march robustness" % d["ratio"])
+    if d.get("capped"):
+        print("NOTE: exact match needed ratio > maxRatio %.2f (march would "
+              "collapse); nLayers increased so the outer cell UNDERSHOOTS "
+              "the target — increase marchDist to hit it exactly"
+              % d["maxRatio"])
 
 
 def check_volume(volfile, h_bg):

@@ -4,7 +4,7 @@
 #  to_vtk.py — convert a (multiblock) formatted PLOT3D volume/surface to VTK
 #  XML structured grids (.vts + a .vtm collection) for ParaView.
 #
-#  Usage:  to_vtk.py <mesh.xyz> [outBase]
+#  Usage:  to_vtk.py <mesh.x> [outBase]
 #     ->   outBase/block00.vts ... + outBase.vtm
 #  Works for both the i=wall-normal volumes from march.py and the surface
 #  skins from blade_surface.py (nk=1).  Pure numpy, no VTK library needed.

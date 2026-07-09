@@ -55,8 +55,8 @@ SURF_KEYS = {"nChord", "nTE", "teCut", "dLE_c", "dTE_c",
              "datSmooth", "capDome"}
 MARCH_KEYS = {"firstLayer", "nLayers", "marchDist", "splay", "volSmoothIter",
               "volBlend", "volCoef", "cMax", "epsE", "epsI", "theta",
-              "nConstantStart", "matchFactor", "autoMatch"}
-BG_KEYS = {"bgSpacing", "bgGrowth", "bgXmin", "bgXmax", "bgYmin", "bgYmax",
+              "nConstantStart", "matchFactor", "autoMatch", "maxRatio"}
+BG_KEYS = {"bgSpacing", "bgGrowth", "bgQuarter", "bgXmin", "bgXmax", "bgYmin", "bgYmax",
            "bgZmin", "bgZmax", "refXmin", "refXmax", "refYmin", "refYmax",
            "refZmin", "refZmax"}
 
@@ -353,6 +353,19 @@ def build(cfg, out, base="."):
         Xs, Zs = place(C, T, chord, twist, zle)
         Xg[:, j] = Xs; Yg[:, j] = yst; Zg[:, j] = Zs
         sec2d.append((C.copy(), T.copy(), chord, twist, zle))
+
+    # datum: put the ROOT quarter-chord at z = 0 (the twist pivot already
+    # sits at x = 0), so the blade pitch/quarter-chord axis passes through
+    # the rotor axis; LE_z entries remain RELATIVE planform shifts.
+    chord0, _, zle0, _, _ = pf.at(stations[0]/R, xc)
+    zshift = zle0 + 0.25*chord0
+    Zg -= zshift
+    for k in range(len(sec2d)):
+        C, T, chord, twist, zle = sec2d[k]
+        sec2d[k] = (C, T, chord, twist, zle - zshift)
+    if abs(zshift) > 0:
+        sys.stderr.write("[blade_surface] z datum: root 0.25c -> z=0 "
+                         "(shift %.6g m)\n" % (-zshift))
 
     blocks = [(Xg, Yg, Zg)]
     if int(s.get("closedTips", s.get("closedSock", 1))):

@@ -20,15 +20,16 @@ nSpan      64          # spanwise stations
 dTipFrac   0.006       # spanwise tanh clustering at the tip (fraction); default uniform
 #rootCut    auto        # span start y/R; default = first SECTIONS r/R (default)
 closedTips 1           # 1: watertight sock with TFI caps / 0: open ends + splay
-capDome    0.25        # rounded tip cap: 0 = flat .. ~1 = half-thickness dome (0.2-0.4 recommended)
+capDome    0           # FLAT caps: the dome folds on this high-camber real-data section
 #datSmooth  5           # smoothing passes for tabulated airfoil files (default)
 
 # ---- march (pyHyp) ----
 firstLayer 3e-06       # first wall spacing [m] (y+ target)
 nLayers    72          # marching layers (overridden when autoMatch 1)
-marchDist  0.11        # total march distance [m]
+marchDist  0.11        # total march distance [m]; larger D destabilizes this section's march
 autoMatch  1           # 1: force nLayers to match the background spacing / 0: use nLayers as written
 #matchFactor 0.9         # target outer cell = matchFactor * h_bg (default)
+maxRatio   1.12        # this real-data cambered section needs a gentle growth ratio
 #splay      0.25        # open-end free-edge splay (default)
 #volSmoothIter 100         # pyHyp volume smoothing iterations (default)
 #volBlend   0.0005      # pyHyp volume blending (default)
@@ -42,6 +43,7 @@ autoMatch  1           # 1: force nLayers to match the background spacing / 0: u
 # ---- overset background (background_mesh.py) ----
 bgSpacing  0.4         # refine-box spacing [tip chords]
 #bgGrowth   1.12        # spacing growth ratio outside the box (default)
+bgQuarter  0           # 1 = quarter (90 deg sector) background, diagonal on +y
 #bgXmin     -4          # domain extents [R]; +x = wake/downstream (default)
 #bgXmax     8           # default 8
 #bgYmin     -4          # default -4
