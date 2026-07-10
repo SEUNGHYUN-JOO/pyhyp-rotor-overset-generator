@@ -17,6 +17,10 @@
 #      bgQuarter   0           # 1 = quarter (90 deg sector) background whose
 #                              #     DIAGONAL bisector is +y (the blade1 span);
 #                              #     bgYmin/bgZmin/refYmin/refZmin are ignored
+#      bgCyl       0           # 1 = single-block CYLINDER about +x: radius
+#                              #     bgYmax*R, refinement cylinder refYmax*R,
+#                              #     x extents/refinement as in the box mode;
+#                              #     z and y/z-minima keywords are ignored
 #      bgXmin -4   bgXmax 8    # domain (R units; +x = downstream/wake)
 #      bgYmin -4   bgYmax 4
 #      bgZmin -4   bgZmax 4
@@ -79,7 +83,40 @@ def build(cfg, out, base="."):
             ("refYmax", 1.2), ("refZmin", -1.2), ("refZmax", 1.2))]
 
     quarter = int(bg.get("bgQuarter", 0))
+    cyl = int(bg.get("bgCyl", 0))
+    if cyl and quarter:
+        raise SystemExit("bgCyl and bgQuarter cannot be combined")
     xs = stretch_axis(dom[0], dom[1], ref[0], ref[1], h0, ratio)
+
+    if cyl:
+        # single-block CYLINDER about the rotor axis (+x): i = x, j = radius,
+        # k = azimuth.  Radius: uniform h0 out to the refinement radius
+        # (refYmax*R), then geometric growth to the domain radius (bgYmax*R).
+        # Azimuth: sized so the arc spacing AT the refinement radius ~ h0;
+        # first/last azimuth planes coincide (seam), the r=0 line is a
+        # degenerate polar axis (standard for single-block polar grids).
+        # bgZ*/refZ* and the y/z minima are ignored in this mode.
+        Rdom = dom[3]
+        r_ref = ref[3]
+        rs = stretch_axis(0.0, Rdom, 0.0, r_ref, h0, ratio)
+        ncirc = max(8, int(np.ceil(2.0*np.pi*r_ref/h0)))
+        th = np.linspace(0.0, 2.0*np.pi, ncirc + 1)
+        ni, nj, nk = len(xs), len(rs), len(th)
+        sys.stderr.write("[background] tip chord %.4g m -> refine spacing "
+                         "%.4g m (%.2f c_tip), growth %.3g, CYLINDER "
+                         "(r_ref %.4g m, R_dom %.4g m, arc@r_ref %.4g m)\n"
+                         % (ctip, h0, h0/ctip, ratio, r_ref, Rdom,
+                            2.0*np.pi*r_ref/ncirc))
+        sys.stderr.write("[background] dims %d x %d x %d = %.2fM cells\n"
+                         % (ni, nj, nk, (ni-1)*(nj-1)*(nk-1)/1e6))
+        X = np.broadcast_to(xs[:, None, None], (ni, nj, nk)).copy()
+        Y = np.broadcast_to((rs[:, None]*np.cos(th)[None, :])[None, :, :],
+                            (ni, nj, nk)).copy()
+        Z = np.broadcast_to((-rs[:, None]*np.sin(th)[None, :])[None, :, :],
+                            (ni, nj, nk)).copy()
+        write_blocks(out, [(X, Y, Z)])
+        return
+
     if quarter:
         # 90-degree sector: build a Cartesian quarter box in a primed frame
         # (y', z' >= 0, edges at the periodic faces), then rotate -45 deg
@@ -101,15 +138,23 @@ def build(cfg, out, base="."):
     if quarter:
         c = np.sqrt(0.5)
         Y, Z = c*(Y + Z), c*(Z - Y)                    # -45 deg about +x
+    write_blocks(out, [(X, Y, Z)])
+
+
+def write_blocks(out, blocks):
+    """Formatted PLOT3D multiblock volume from [i,j,k]-indexed blocks."""
     with open(out, "w") as f:
-        f.write("1\n%d %d %d\n" % (ni, nj, nk))
-        for A in (X, Y, Z):
-            B = np.transpose(A, (2, 1, 0))             # k slowest -> i fastest
-            # exponent format on purpose: a Cartesian grid emits thousands of
-            # integer-valued coordinates, and bare-integer tokens make some
-            # PLOT3D importers (e.g. Pointwise) misdetect IBLANK data
-            f.write("\n".join("%.10e" % v for v in B.ravel()))
-            f.write("\n")
+        f.write("%d\n" % len(blocks))
+        for (X, _, _) in blocks:
+            f.write("%d %d %d\n" % X.shape)
+        for (X, Y, Z) in blocks:
+            for A in (X, Y, Z):
+                B = np.transpose(A, (2, 1, 0))         # k slowest -> i fastest
+                # exponent format on purpose: uniform grids emit thousands of
+                # integer-valued coordinates, and bare-integer tokens make
+                # some PLOT3D importers (e.g. Pointwise) misdetect IBLANK
+                f.write("\n".join("%.10e" % v for v in B.ravel()))
+                f.write("\n")
     sys.stderr.write("[background] wrote %s\n" % out)
 
 

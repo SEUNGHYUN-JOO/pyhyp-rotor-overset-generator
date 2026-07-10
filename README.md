@@ -134,6 +134,9 @@ autoMatch  1            # 1: force nLayers so the outer wall-normal cell
 #bgQuarter 0            # 1: quarter (90 deg sector) background whose diagonal
                         #    bisector is +y (the blade1 span); the y/z min
                         #    keywords are ignored                  (default 0)
+#bgCyl     0            # 1: single-block CYLINDER background about +x
+                        #    (radius bgYmax*R, refine radius refYmax*R;
+                        #    z / y-z minima keywords are ignored)  (default 0)
 #bgXmin    -4           # domain extents [R]; +x = wake/downstream (defaults:
 #bgXmax    8            #   x in [-4, 8], y and z in [-4, 4])
 #bgYmin    -4
@@ -223,6 +226,7 @@ boundary.
 bgSpacing  0.15         # refine-box spacing [tip chords]
 bgGrowth   1.12         # spacing growth ratio outside the box
 bgQuarter  0            # 1 = quarter (90 deg sector) background, diagonal on +y
+bgCyl      0            # 1 = single-block cylinder background about +x
 bgXmin -4   bgXmax 8    # domain extents [R]  (+x = wake/downstream)
 bgYmin -4   bgYmax 4
 bgZmin -4   bgZmax 4
@@ -238,6 +242,16 @@ the sector and the two straight sector faces (the periodic boundaries) are
 at ±45° from +y. The `bgYmin`/`bgZmin`/`refYmin`/`refZmin` keywords are
 ignored in this mode (the maxima set the sector-face extents); the output is
 still a single structured block named `background.x`.
+
+With **`bgCyl 1`** the background is a single-block **cylinder** about the
+rotor axis (+x) instead of a box: i = x, j = radius, k = azimuth. The
+radius runs to `bgYmax`·R with a **refinement cylinder** of radius
+`refYmax`·R (uniform `bgSpacing`·c_tip spacing, geometric growth outside);
+the x extents and x-refinement are identical to the box mode. The azimuth
+count is sized so the arc spacing *at the refinement radius* also lands at
+~`bgSpacing`·c_tip. The first/last azimuth planes coincide (interior seam,
+θ = 0 on +y) and the r = 0 line is a degenerate polar axis — standard for
+single-block polar grids. `bgZ*` and the y/z minima keywords are ignored.
 
 ### Matching the blade outer spacing to the background
 

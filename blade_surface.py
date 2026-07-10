@@ -56,7 +56,7 @@ SURF_KEYS = {"nChord", "nTE", "teCut", "dLE_c", "dTE_c",
 MARCH_KEYS = {"firstLayer", "nLayers", "marchDist", "splay", "volSmoothIter",
               "volBlend", "volCoef", "cMax", "epsE", "epsI", "theta",
               "nConstantStart", "matchFactor", "autoMatch", "maxRatio"}
-BG_KEYS = {"bgSpacing", "bgGrowth", "bgQuarter", "bgXmin", "bgXmax", "bgYmin", "bgYmax",
+BG_KEYS = {"bgSpacing", "bgGrowth", "bgQuarter", "bgCyl", "bgXmin", "bgXmax", "bgYmin", "bgYmax",
            "bgZmin", "bgZmax", "refXmin", "refXmax", "refYmin", "refYmax",
            "refZmin", "refZmax"}
 
