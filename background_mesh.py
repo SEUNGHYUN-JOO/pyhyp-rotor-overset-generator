@@ -17,10 +17,10 @@
 #      bgQuarter   0           # 1 = quarter (90 deg sector) background whose
 #                              #     DIAGONAL bisector is +y (the blade1 span);
 #                              #     bgYmin/bgZmin/refYmin/refZmin are ignored
-#      bgCyl       0           # 1 = single-block CYLINDER about +x: radius
-#                              #     bgYmax*R, refinement cylinder refYmax*R,
-#                              #     x extents/refinement as in the box mode;
-#                              #     z and y/z-minima keywords are ignored
+#      bgCyl       0           # 1 = CYLINDER about +x, butterfly (O-H)
+#                              #     5-block topology: radius bgYmax*R,
+#                              #     refinement cylinder refYmax*R, x as in
+#                              #     the box mode; z / y-z minima ignored
 #      bgXmin -4   bgXmax 8    # domain (R units; +x = downstream/wake)
 #      bgYmin -4   bgYmax 4
 #      bgZmin -4   bgZmax 4
@@ -89,32 +89,56 @@ def build(cfg, out, base="."):
     xs = stretch_axis(dom[0], dom[1], ref[0], ref[1], h0, ratio)
 
     if cyl:
-        # single-block CYLINDER about the rotor axis (+x): i = x, j = radius,
-        # k = azimuth.  Radius: uniform h0 out to the refinement radius
-        # (refYmax*R), then geometric growth to the domain radius (bgYmax*R).
-        # Azimuth: sized so the arc spacing AT the refinement radius ~ h0;
-        # first/last azimuth planes coincide (seam), the r=0 line is a
-        # degenerate polar axis (standard for single-block polar grids).
-        # bgZ*/refZ* and the y/z minima are ignored in this mode.
+        # CYLINDER about the rotor axis (+x), butterfly (O-H) topology:
+        # a central square H-block plus four O-blocks out to the rim.
+        # No polar axis singularity and no thin near-axis slivers -- the
+        # center is covered by a near-isotropic h0 x h0 Cartesian core.
+        #   block 0        : square, |y|,|z| <= w = 0.7*refYmax*R, spacing h0
+        #   blocks 1..4    : quarters around +y, -z, -y, +z (blade order);
+        #                    j = along the square edge, k = radial with
+        #                    uniform h0 out to the refinement radius
+        #                    (refYmax*R) then geometric growth to bgYmax*R
+        # The azimuthal arc AT the refinement radius ~ 1.1*h0 by the choice
+        # w = 0.7*r_ref.  bgZ*/refZ* and the y/z minima are ignored.
         Rdom = dom[3]
         r_ref = ref[3]
-        rs = stretch_axis(0.0, Rdom, 0.0, r_ref, h0, ratio)
-        ncirc = max(8, int(np.ceil(2.0*np.pi*r_ref/h0)))
-        th = np.linspace(0.0, 2.0*np.pi, ncirc + 1)
-        ni, nj, nk = len(xs), len(rs), len(th)
+        w = 0.7*r_ref
+        n_edge = max(5, int(round(2.0*w/h0)) + 1)
+        edge = np.linspace(-w, w, n_edge)
+        rs = stretch_axis(w, Rdom, w, r_ref, h0, ratio)
+        fr = (rs - w)/(Rdom - w)
+        nr = len(fr)
+        ni = len(xs)
+
+        blocks2d = [np.meshgrid(edge, edge, indexing="ij")]   # square [j,k]
+        phi = np.radians(np.linspace(-45.0, 45.0, n_edge))
+        Sy = np.full(n_edge, w); Sz = edge                    # square edge
+        Cy = Rdom*np.cos(phi); Cz = Rdom*np.sin(phi)          # outer rim
+        Yo = Sy[:, None] + fr[None, :]*(Cy - Sy)[:, None]
+        Zo = Sz[:, None] + fr[None, :]*(Cz - Sz)[:, None]
+        for q in range(4):                                    # +y,-z,-y,+z
+            a = np.radians(-90.0*q)
+            ca, sa = np.cos(a), np.sin(a)
+            blocks2d.append((ca*Yo - sa*Zo, sa*Yo + ca*Zo))
+
+        blocks = []
+        for (Y2, Z2) in blocks2d:
+            nj, nk = Y2.shape
+            blocks.append((
+                np.broadcast_to(xs[:, None, None], (ni, nj, nk)).copy(),
+                np.broadcast_to(Y2[None, :, :], (ni, nj, nk)).copy(),
+                np.broadcast_to(Z2[None, :, :], (ni, nj, nk)).copy()))
+        ncell = (ni - 1)*((n_edge - 1)**2 + 4*(n_edge - 1)*(nr - 1))
         sys.stderr.write("[background] tip chord %.4g m -> refine spacing "
-                         "%.4g m (%.2f c_tip), growth %.3g, CYLINDER "
-                         "(r_ref %.4g m, R_dom %.4g m, arc@r_ref %.4g m)\n"
-                         % (ctip, h0, h0/ctip, ratio, r_ref, Rdom,
-                            2.0*np.pi*r_ref/ncirc))
-        sys.stderr.write("[background] dims %d x %d x %d = %.2fM cells\n"
-                         % (ni, nj, nk, (ni-1)*(nj-1)*(nk-1)/1e6))
-        X = np.broadcast_to(xs[:, None, None], (ni, nj, nk)).copy()
-        Y = np.broadcast_to((rs[:, None]*np.cos(th)[None, :])[None, :, :],
-                            (ni, nj, nk)).copy()
-        Z = np.broadcast_to((-rs[:, None]*np.sin(th)[None, :])[None, :, :],
-                            (ni, nj, nk)).copy()
-        write_blocks(out, [(X, Y, Z)])
+                         "%.4g m (%.2f c_tip), growth %.3g, CYLINDER O-H "
+                         "(square w %.4g m, r_ref %.4g m, R_dom %.4g m, "
+                         "arc@r_ref %.4g m)\n"
+                         % (ctip, h0, h0/ctip, ratio, w, r_ref, Rdom,
+                            0.5*np.pi*r_ref/(n_edge - 1)))
+        sys.stderr.write("[background] 5 blocks: square %dx%dx%d + 4 x "
+                         "%dx%dx%d = %.2fM cells\n"
+                         % (ni, n_edge, n_edge, ni, n_edge, nr, ncell/1e6))
+        write_blocks(out, blocks)
         return
 
     if quarter:

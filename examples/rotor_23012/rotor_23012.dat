@@ -43,7 +43,7 @@ autoMatch  1           # 1: force nLayers to match the background spacing / 0: u
 bgSpacing  0.4         # refine-box spacing [tip chords]
 #bgGrowth   1.12        # spacing growth ratio outside the box (default)
 bgQuarter  0           # 1 = quarter (90 deg sector) background, diagonal on +y
-#bgCyl     0           # 1 = single-block CYLINDER background about +x (default 0)
+#bgCyl     0           # 1 = cylinder background (butterfly O-H, 5 blocks) (default 0)
 #bgXmin     -4          # domain extents [R]; +x = wake/downstream (default)
 #bgXmax     8           # default 8
 #bgYmin     -4          # default -4
